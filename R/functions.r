@@ -91,7 +91,6 @@ PreProcess = function(MouseData)
 #' This function computes the predictions from a pre-processed mouse dataset and the slopes computed for the reference data. 
 #' In the process confidence intervals are computed as well per gene.
 #' @param NewMouse_df The pre-processed mouse dataset
-#' @export
 ComputePredictions = function(NewMouse_df)
 {
   slopes = readRDS("slopes_per_gene_V2.0.rds")
@@ -129,6 +128,7 @@ ComputePredictions = function(NewMouse_df)
 #' 
 #' This function runs the whole FIT pipeline: checks input file format, pre-processes data and computes predictions.
 #' @param NewMouse_df The pre-processed mouse dataset
+#' @export
 FIT = function(MouseFile)
 {
   MouseData = read.table(MouseFile, sep=",", header=T, row.names = 1)
