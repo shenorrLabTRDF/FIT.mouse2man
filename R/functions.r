@@ -9,7 +9,7 @@
 #' @param MouseData The mouse data
 CheckFormat = function(MouseData)
 {
-  conv = read.table(file.path(APP_PATH,"MM_Entrez_Symbol_Description.csv"),header=T,  sep=",")
+  conv = read.table(file.path("MM_Entrez_Symbol_Description.csv"),header=T,  sep=",")
   MM_entrez = conv[,"Mouse.Entrez"]
   names = rownames(MouseData)
   
@@ -77,7 +77,7 @@ PreProcess = function(MouseData)
   rownames(comb_data) = comb_data[,"gene"]
   comb_data = comb_data[,-1]
   
-  conv = read.table(file.path(APP_PATH, "MGD_orthologs.csv"), sep=",", header=T)
+  conv = read.table(file.path("MGD_orthologs.csv"), sep=",", header=T)
   comb_data = merge(comb_data, conv, by.x=0, by.y="Mouse", all.x=T, all.y=F)
   colnames(comb_data) = c("MM.Entrez", "FC", "Ztest", "HS.Entrez")
   
