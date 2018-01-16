@@ -91,6 +91,7 @@ PreProcess = function(MouseData)
 #' This function computes the predictions from a pre-processed mouse dataset and the slopes computed for the reference data. 
 #' In the process confidence intervals are computed as well per gene.
 #' @param NewMouse_df The pre-processed mouse dataset
+#' @export
 ComputePredictions = function(NewMouse_df)
 {
   slopes = readRDS("slopes_per_gene_V2.0.rds")
