@@ -47,7 +47,7 @@ CheckFormat = function(MouseData)
 #' @param MouseData The mouse data.
 PreProcess = function(MouseData)
 {
-  slopes_per_gene = readRDS("slopes_per_gene_V2.0.rds")
+  slopes_per_gene = slopes_per_gene_V2.0
   NewMouse = MouseData[rownames(MouseData) %in% names(slopes_per_gene),]
     
   dis_samp = grep("d_*", colnames(NewMouse), perl = T)
