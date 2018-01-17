@@ -9,7 +9,7 @@
 #' @param MouseData The mouse data
 CheckFormat = function(MouseData)
 {
-  conv = data(MM_Entrez_symbol_desc)
+  conv = MM_Entrez_symbol_desc
   MM_entrez = conv[,"MM.Entrez"]
   names = rownames(MouseData)
   
@@ -76,7 +76,7 @@ PreProcess = function(MouseData)
   colnames(comb_data)=c("gene", "FC", "Ztest")
   rownames(comb_data) = comb_data[,"gene"]
   comb_data = comb_data[,-1]
-  conv = data(MGD_orthologs)
+  conv = MGD_orthologs
   comb_data = merge(comb_data, conv, by.x=0, by.y="Mouse", all.x=T, all.y=F)
   colnames(comb_data) = c("MM.Entrez", "FC", "Ztest", "HS.Entrez")
   
@@ -92,7 +92,7 @@ PreProcess = function(MouseData)
 #' @param NewMouse_df The pre-processed mouse dataset
 ComputePredictions = function(NewMouse_df)
 {
-  slopes = data(slopes_per_gene_V2.0)
+  slopes = slopes_per_gene_V2.0
   
   # Computing predicitons
   predictions = sapply(NewMouse_df$MM.Entrez, function(g)
