@@ -14,23 +14,23 @@ CheckFormat = function(MouseData)
   names = rownames(MouseData)
   
   per = sum(names %in% MM_entrez)*100/length(names)
-  if (per<80) return("\n\nError: Data not in a correct format: Less than 80% of the row names are Entrez ID")
+  if (per<80) return("Error: Data not in a correct format: Less than 80% of the row names are Entrez ID")
   else
   {
     samp_names = colnames(MouseData)
     if(length(grep("c_*|d_*", samp_names, perl = T, invert = T))>0)
-      err="\n\n: The data not in a correct format: All sample names (colnames) should start with c_ or d_."
+      err="Error: The data not in a correct format: All sample names (colnames) should start with c_ or d_."
     else 
       if(sum(grepl("c_*", samp_names, perl = T))<3)
-        err="\n\nError: The data not in a correct format: There are less than 3 control samples."
+        err="Error: The data not in a correct format: There are less than 3 control samples."
       else
         if(sum(grepl("d_*", samp_names, perl = T))<3)
-          err = "\n\nError: The data not in a correct format: There are less than 3 disease samples."
+          err = "Error: The data not in a correct format: There are less than 3 disease samples."
         else
           if ((range(MouseData)[1]<0) || range(MouseData)[2]>100)
-            err="\n\nError: The data not in a correct format: It is not logged transformed."
+            err="Error: The data not in a correct format: It is not logged transformed."
           else
-            err = "\n\nSuccess: The data is in the correct format.\nThe next step is to pre-process the data: compute fold-change, z-scores and z-test per gene."
+            err = "Success: The data is in the correct format."
   }
   return(err)
 }
@@ -116,8 +116,14 @@ ComputePredictions = function(NewMouse_df)
   final$pred_percentile = round(rank(abs(final$mean_pred))*100/tot,2)
   final$UpDown = sapply(final$mean_pred, function(x) ifelse(x>0,"+","-"))
   
+  # Adding original data
   final = merge(final, NewMouse_df, by.x = 0, by.y="MM.Entrez")
   colnames(final)[c(1,9:10)] = c("MM.Entrez", "Orig_FC", "Orig_Ztest")
+  
+  # Combining with human genes and details
+  conv = HS_MM_Symbol_Entrez
+  merge(final, conv, )
+  
   final
 }
 
@@ -130,11 +136,14 @@ ComputePredictions = function(NewMouse_df)
 #' @export
 FIT = function(MouseFile)
 {
+  message("Step 1:\nUploading input data and checking data format")
   MouseData = read.table(MouseFile, sep=",", header=T, row.names = 1)
   Err = CheckFormat(MouseData)
   message(Err)
   
+  message("\nStep 2:\nPreprocessing the input data: computing fold-change, z-scores and z-test per gene.")
   NewMouse_df = PreProcess(MouseData)
     
+  message("\nStep 3:\nPredicting human relevant genes using the FIT model.")
   ComputePredictions(NewMouse_df)
 }
