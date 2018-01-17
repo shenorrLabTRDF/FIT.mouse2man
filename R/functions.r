@@ -9,8 +9,8 @@
 #' @param MouseData The mouse data
 CheckFormat = function(MouseData)
 {
-  conv = data("MM_Entrez_Symbol_Description.csv")
-  MM_entrez = conv[,"Mouse.Entrez"]
+  conv = data("MM_Entrez_symbol_desc.rda")
+  MM_entrez = conv[,"MM.Entrez"]
   names = rownames(MouseData)
   
   per = sum(names %in% MM_entrez)*100/length(names)
