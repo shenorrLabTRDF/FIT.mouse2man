@@ -7,7 +7,9 @@
 ComputePredictions(NewMouse_df)
 }
 \arguments{
-\item{NewMouse_df}{The pre-processed mouse dataset}
+\item{NewMouse_df}{The pre-processed mouse dataset
+#' @return A dataframe including the following columns:
+  *}
 }
 \description{
 This function computes the predictions from a pre-processed mouse dataset and the slopes computed for the reference data. 

@@ -90,6 +90,8 @@ PreProcess = function(MouseData)
 #' This function computes the predictions from a pre-processed mouse dataset and the slopes computed for the reference data. 
 #' In the process confidence intervals are computed as well per gene.
 #' @param NewMouse_df The pre-processed mouse dataset
+#' #' @return A dataframe including the following columns:
+#'   * 
 ComputePredictions = function(NewMouse_df)
 {
   slopes = slopes_per_gene_V2.0
@@ -122,9 +124,14 @@ ComputePredictions = function(NewMouse_df)
   
   # Combining with human genes and details
   conv = HS_MM_Symbol_Entrez
-  merge(final, conv, )
-  
-  final
+  final_ann = merge(final, conv, by.x="MM.Entrez", by.y= "Mouse.Ortholog", all.x=T, all.y=F)
+  colnames(final_ann) = c("Mouse.Entrez", "FIT_prediction",  "CI_low", "CI_high", "CI_size", "CI_percentile", "FIT_percentile", 
+                      "UpDown", "Mouse_FoldChange", "Mouse_Ztest", "Human.Entrez", "Human.symbol", "Human.Entrez", "Mouse.symbol")
+  final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol",
+                           "Mouse_FoldChange", "Mouse_Ztest", "FIT_prediction","FIT_percentile",
+                           "UpDown", "CI_low", "CI_high", "CI_size", "CI_percentile")]
+  final_ann = final_ann[order(abs(final_ann$FIT_prediction), decreasing = T), ]
+  final_ann
 }
 
 
@@ -132,7 +139,17 @@ ComputePredictions = function(NewMouse_df)
 #' Run FIT pipeline
 #' 
 #' This function runs the whole FIT pipeline: checks input file format, pre-processes data and computes predictions.
-#' @param NewMouse_df The pre-processed mouse dataset
+#' @param MouseFile File name that includes the mouse data, in CSV format
+#' @return A data.frame containing the following columns:
+#' \itemize{
+#'   \item{\strong{Mouse.Entrez, Human.Entrez, Mouse.symbol, Human.symbol} - Gene IDs}
+#'   \item{\strong{Mouse_FoldChange} - Mouse fold-change as computed from the mouse input data}
+#'   \item{\strong{Mouse_Ztest} - Mouse Z-test values as computed from the mouse input data}
+#'   \item{\strong{FIT_prediction} - Human effect-size prediction by the FIT model}
+#'   \item{\strong{FIT_percentile} - Percentiles of absolute values of FIT's predictions}
+#'   \item{\strong{UpDown} - Sign of prediction}
+#'   \item{\strong{CI_low, CI_low, CI_size, CI_percentile} - Confidenc einterval values (low, high), overall size (high-low) and percentile}
+#'   }
 #' @export
 FIT = function(MouseFile)
 {
@@ -147,3 +164,5 @@ FIT = function(MouseFile)
   message("\nStep 3:\nPredicting human relevant genes using the FIT model.")
   ComputePredictions(NewMouse_df)
 }
+
+
