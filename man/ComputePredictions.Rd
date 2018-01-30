@@ -4,7 +4,7 @@
 \alias{ComputePredictions}
 \title{Compute FIT predictions}
 \usage{
-ComputePredictions(NewMouse_df)
+ComputePredictions(NewMouse_df, DataType)
 }
 \arguments{
 \item{NewMouse_df}{The pre-processed mouse dataset

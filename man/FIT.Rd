@@ -4,10 +4,12 @@
 \alias{FIT}
 \title{Run FIT pipeline}
 \usage{
-FIT(MouseFile)
+FIT(MouseFile, DataType)
 }
 \arguments{
 \item{MouseFile}{File name that includes the mouse data, in CSV format}
+
+\item{DataType}{Either "microarray" or "rnaseq", depending on the technology by which the data was assayed.}
 }
 \value{
 A data.frame containing the following columns:
@@ -22,5 +24,6 @@ A data.frame containing the following columns:
   }
 }
 \description{
-This function runs the whole FIT pipeline: checks input file format, pre-processes data and computes predictions.
+This function runs the whole FIT pipeline: checks input file format, pre-processes data (for microarray data only) 
+and computes predictions.
 }

@@ -2,3 +2,4 @@
 
 export(FIT)
 export(GetRefData)
+export(GetSampleData)

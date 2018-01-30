@@ -1,43 +1,48 @@
 #' Check input file format
 #'
 #' This function validates the format of the input mouse gene expression file is correct for process by FIT.
-#' It will output an error message in 3 cases: 
-#' (a) Less than 80% of the gene IDs are Entrez IDs; 
-#' (b) Sample names don't start with "c_" or "d_"
-#' (c) There are at least 3 disease samples and 3 control samples
-#' (d) The data i snot log-transformed (the range of values are either <0 or >100)
+#' It will output an error message int he following cases:
+#' (a) Less than 80% of the gene IDs are Entrez IDs  (for RNAseq data and microarray data)
+#' (b) Sample names don't start with "c_" or "d_"  (for microarray daat only)
+#' (c) There are at least 3 disease samples and 3 control samples  (for microarray daat only)
+#' (d) The data i snot log-transformed (the range of values are either <0 or >100)  (for microarray daat only)
 #' @param MouseData The mouse data
-CheckFormat = function(MouseData)
+CheckFormat = function(MouseData, DataType)
 {
   conv = MM_Entrez_symbol_desc
   MM_entrez = conv[,"MM.Entrez"]
-  names = rownames(MouseData)
+  if (DataType=="microarray") names = rownames(MouseData)
+  else names = MouseData$MM.Entrez
   
   per = sum(names %in% MM_entrez)*100/length(names)
-  if (per<80) return("Error: Data not in a correct format: Less than 80% of the row names are Entrez ID")
+  if (per<80) stop("Error: Data not in a correct format: Less than 80% of the row names are Entrez ID")
   else
   {
-    samp_names = colnames(MouseData)
-    if(length(grep("c_*|d_*", samp_names, perl = T, invert = T))>0)
-      err="Error: The data not in a correct format: All sample names (colnames) should start with c_ or d_."
-    else 
-      if(sum(grepl("c_*", samp_names, perl = T))<3)
-        err="Error: The data not in a correct format: There are less than 3 control samples."
-      else
-        if(sum(grepl("d_*", samp_names, perl = T))<3)
-          err = "Error: The data not in a correct format: There are less than 3 disease samples."
+    if(DataType=="rnaseq") err = "\n\nSuccess: The data is in the correct format.\nThe next step is to run the analysis."
+    else
+    {
+      samp_names = colnames(MouseData)
+      if(length(grep("c_*|d_*", samp_names, perl = T, invert = T))>0)
+        stop("Error: The data not in a correct format: All sample names (colnames) should start with c_ or d_.")
+      else 
+        if(sum(grepl("c_*", samp_names, perl = T))<3)
+          stop("Error: The data not in a correct format: There are less than 3 control samples.")
         else
-          if ((range(MouseData)[1]<0) || range(MouseData)[2]>100)
-            err="Error: The data not in a correct format: It is not logged transformed."
+          if(sum(grepl("d_*", samp_names, perl = T))<3)
+            stop("Error: The data not in a correct format: There are less than 3 disease samples.")
           else
-            err = "Success: The data is in the correct format."
+            if ((range(MouseData)[1]<0) || range(MouseData)[2]>100)
+              stop("Error: The data not in a correct format: It is not logged transformed.")
+            else
+              err = "Success: The data is in the correct format."
+    }
   }
   return(err)
 }
 
 
 
-#' Pre-processing of mouse data for predictions by FIT
+#' Pre-processing of mouse data for predictions by FIT (for microarray data only)
 #' 
 #' Pre-processing includes 4 steps:
 #' a) Computing fold-change per gene
@@ -48,7 +53,6 @@ CheckFormat = function(MouseData)
 PreProcess = function(MouseData)
 {
   slopes_per_gene = slopes_per_gene_V2.0
-  NewMouse = MouseData[rownames(MouseData) %in% names(slopes_per_gene),]
     
   dis_samp = grep("d_*", colnames(NewMouse), perl = T)
   cont_samp = grep("c_*", colnames(NewMouse), perl = T)
@@ -73,12 +77,12 @@ PreProcess = function(MouseData)
   Z_test_standard = (Z_test - Ztest_mean)/Ztest_mean_sd
   
   comb_data = merge(FC_Mouse, Z_test_standard, by=0) 
-  colnames(comb_data)=c("gene", "FC", "Ztest")
+  colnames(comb_data)=c("gene", "FC", "EffectSize")
   rownames(comb_data) = comb_data[,"gene"]
   comb_data = comb_data[,-1]
   conv = MGD_orthologs
   comb_data = merge(comb_data, conv, by.x=0, by.y="Mouse", all.x=T, all.y=F)
-  colnames(comb_data) = c("MM.Entrez", "FC", "Ztest", "HS.Entrez")
+  colnames(comb_data) = c("MM.Entrez", "FC", "EffectSize", "HS.Entrez")
   
   return(comb_data)
 }
@@ -92,7 +96,7 @@ PreProcess = function(MouseData)
 #' @param NewMouse_df The pre-processed mouse dataset
 #' #' @return A dataframe including the following columns:
 #'   * 
-ComputePredictions = function(NewMouse_df)
+ComputePredictions = function(NewMouse_df, DataType)
 {
   slopes = slopes_per_gene_V2.0
   
@@ -103,7 +107,7 @@ ComputePredictions = function(NewMouse_df)
     curr_slopes = curr_slopes[!is.na(curr_slopes)]
     if(length(curr_slopes) != 100) curr_slopes[(length(curr_slopes)+1):100]=NA
     
-    curr_MM = subset(NewMouse_df, MM.Entrez==g, Ztest)[,1]
+    curr_MM = subset(NewMouse_df, MM.Entrez==g, "EffectSize")[,1]
     curr_slopes + (curr_MM*curr_slopes) 
   })
   final = data.frame(mean_pred=colMeans(predictions, na.rm=T))
@@ -120,16 +124,28 @@ ComputePredictions = function(NewMouse_df)
   
   # Adding original data
   final = merge(final, NewMouse_df, by.x = 0, by.y="MM.Entrez")
-  colnames(final)[c(1,9:10)] = c("MM.Entrez", "Orig_FC", "Orig_Ztest")
+  if(DataType=="microarray") colnames(final)[c(1,9:10)] = c("MM.Entrez", "Orig_FC", "Orig_Ztest")
+  else colnames(final)[c(1,9)] = c("MM.Entrez", "Orig_Ztest")
   
   # Combining with human genes and details
   conv = HS_MM_Symbol_Entrez
   final_ann = merge(final, conv, by.x="MM.Entrez", by.y= "Mouse.Ortholog", all.x=T, all.y=F)
-  colnames(final_ann) = c("Mouse.Entrez", "FIT_prediction",  "CI_low", "CI_high", "CI_size", "CI_percentile", "FIT_percentile", 
-                      "UpDown", "Mouse_FoldChange", "Mouse_Ztest", "Human.Entrez", "Human.symbol", "Human.Entrez", "Mouse.symbol")
-  final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol",
-                           "Mouse_FoldChange", "Mouse_Ztest", "FIT_prediction","FIT_percentile",
-                           "UpDown", "CI_low", "CI_high", "CI_size", "CI_percentile")]
+  if(DataType=="microarray")
+  {
+    colnames(final_ann) = c("Mouse.Entrez", "FIT_prediction",  "CI_low", "CI_high", "CI_size", "CI_percentile", "FIT_percentile", 
+                        "UpDown", "Mouse_FoldChange", "Mouse_EffectSize", "Human.Entrez", "Human.symbol", "Human.Entrez", "Mouse.symbol")
+    final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol",
+                             "Mouse_FoldChange", "Mouse_EffectSize", "FIT_prediction","FIT_percentile",
+                             "UpDown", "CI_low", "CI_high", "CI_size", "CI_percentile")]
+  }
+  else
+  {
+    colnames(final_ann) = c("Mouse.Entrez", "FIT_prediction",  "CI_low", "CI_high", "CI_size", "CI_percentile", "FIT_percentile", 
+                            "UpDown", "Mouse_EffectSize", "Human.symbol", "Human.Entrez", "Mouse.symbol")
+    final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol",
+                             "Mouse_EffectSize", "FIT_prediction","FIT_percentile",
+                             "UpDown", "CI_low", "CI_high", "CI_size", "CI_percentile")]
+  }
   final_ann = final_ann[order(abs(final_ann$FIT_prediction), decreasing = T), ]
   final_ann
 }
@@ -138,8 +154,10 @@ ComputePredictions = function(NewMouse_df)
 
 #' Run FIT pipeline
 #' 
-#' This function runs the whole FIT pipeline: checks input file format, pre-processes data and computes predictions.
+#' This function runs the whole FIT pipeline: checks input file format, pre-processes data (for microarray data only) 
+#' and computes predictions.
 #' @param MouseFile File name that includes the mouse data, in CSV format
+#' @param DataType Either "microarray" or "rnaseq", depending on the technology by which the data was assayed.
 #' @return A data.frame containing the following columns:
 #' \itemize{
 #'   \item{\strong{Mouse.Entrez, Human.Entrez, Mouse.symbol, Human.symbol} - Gene IDs}
@@ -151,18 +169,35 @@ ComputePredictions = function(NewMouse_df)
 #'   \item{\strong{CI_low, CI_low, CI_size, CI_percentile} - Confidenc einterval values (low, high), overall size (high-low) and percentile}
 #'   }
 #' @export
-FIT = function(MouseFile)
+FIT = function(MouseFile, DataType)
 {
+  if((DataType != "microarray") & (DataType != "rnaseq")) stop("Error: DataType should be 'rnaseq' or 'microarray'.")
+  if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
+    
   message("Step 1:\nUploading input data and checking data format")
-  MouseData = read.table(MouseFile, sep=",", header=T, row.names = 1)
-  Err = CheckFormat(MouseData)
+  if(DataType=="microarray") MouseData = read.table(MouseFile, sep=",", header=T, row.names = 1)
+  else 
+    {
+      MouseData = read.table(MouseFile, sep=",", header=T)
+      colnames(MouseData) = c("MM.Entrez","EffectSize")
+      MouseData$MM.Entrez = as.character(MouseData$MM.Entrez)
+    }
+  Err = CheckFormat(MouseData, DataType)
   message(Err)
   
-  message("\nStep 2:\nPreprocessing the input data: computing fold-change, z-scores and z-test per gene.")
-  NewMouse_df = PreProcess(MouseData)
+  if (DataType=="microarray") NewMouse_df = MouseData[rownames(MouseData) %in% names(slopes_per_gene_V2.0),]
+  else NewMouse_df = MouseData[MouseData$MM.Entrez %in% names(slopes_per_gene_V2.0),]
+  message("\nInitial number of genes: ",nrow(MouseData), "\nNumber of genes for which FIT predictions will be calculated: ", nrow(NewMouse_df))
+  
+  if (DataType=="microarray") 
+  {
+    message("\nStep 2:\nPreprocessing the input data: computing fold-change, z-scores and z-test per gene.")
+    NewMouse_df = PreProcess(NewMouse_df)
+  } 
     
-  message("\nStep 3:\nPredicting human relevant genes using the FIT model.")
-  ComputePredictions(NewMouse_df)
+  if (DataType=="microarray") message("\nStep 3:\nPredicting human relevant genes using the FIT model.")
+  else message("\nStep 2:\nPredicting human relevant genes using the FIT model.")
+  ComputePredictions(NewMouse_df, DataType)
 }
 
 
@@ -190,4 +225,20 @@ GetRefData = function()
 {
   AllData_V2.0
 }
+
+
+#' Download sampel data
+#' 
+#' This function allows download of sample data that can be used by FIT, in CSV format.
+#' The file will be saved in the name "SampleRNAseq.csv" or "SampleMicroarray.csv" depending on the DataType chosen.
+#' @param DataType Either "microarray" or "rnaseq", depending on the technology by which the data was assayed.
+#' @export
+GetSampleData = function(DataType)
+{
+  if(DataType == "rnaseq") write.table(RNAseq_sample, "SampleRNAseq.csv", sep=",", quote = F, row.names = F)
+  else if(DataType == "microarray") write.table(microarray_sample, "SampleMicroarray.csv", sep=",", quote = F, row.names = F)
+  else  stop("Error: DataType should be 'rnaseq' or 'microarray'.")
+}
+
+
 

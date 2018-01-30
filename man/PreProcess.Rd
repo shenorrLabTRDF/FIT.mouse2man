@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.r
 \name{PreProcess}
 \alias{PreProcess}
-\title{Pre-processing of mouse data for predictions by FIT}
+\title{Pre-processing of mouse data for predictions by FIT (for microarray data only)}
 \usage{
 PreProcess(MouseData)
 }

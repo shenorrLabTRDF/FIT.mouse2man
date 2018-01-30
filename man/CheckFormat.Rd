@@ -4,16 +4,16 @@
 \alias{CheckFormat}
 \title{Check input file format}
 \usage{
-CheckFormat(MouseData)
+CheckFormat(MouseData, DataType)
 }
 \arguments{
 \item{MouseData}{The mouse data}
 }
 \description{
 This function validates the format of the input mouse gene expression file is correct for process by FIT.
-It will output an error message in 3 cases: 
-(a) Less than 80% of the gene IDs are Entrez IDs; 
-(b) Sample names don't start with "c_" or "d_"
-(c) There are at least 3 disease samples and 3 control samples
-(d) The data i snot log-transformed (the range of values are either <0 or >100)
+It will output an error message int he following cases:
+(a) Less than 80% of the gene IDs are Entrez IDs  (for RNAseq data and microarray data)
+(b) Sample names don't start with "c_" or "d_"  (for microarray daat only)
+(c) There are at least 3 disease samples and 3 control samples  (for microarray daat only)
+(d) The data i snot log-transformed (the range of values are either <0 or >100)  (for microarray daat only)
 }
