@@ -244,12 +244,13 @@ GetSampleData = function(DataType)
 
 #' Run FIT improvement prediction classifier 
 #' 
-#' The SVM classifier predicts whether FIT will be able to improve a spcific mouse data
+#' The SVM classifier predicts whether FIT will be able to improve a specific mouse data
 #' 
 #' @param MouseFile File name that includes the mouse data, in CSV format 
-#' @param qval the q-value cuttoff the user will use to interperct FIT's predictions. (default= 0.1)
-#' @param FC the fold-cahnge cuttoff the user will use to interperct FIT's predictions, given as fraction from the top. For example, 
+#' @param qval the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)
+#' @param FC the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
 #'            0.15 denotes the top 15% of genes with highest fold-change. (default= 0.15)
+#' @export
 RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
 {
   # Input checks
@@ -292,7 +293,11 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
 }
 
 
-
+#' ShowClassifierPerformance
+#' 
+#' Show performance of SVM classifier (as an image, taken from the paper)
+#' 
+#' @export
 ShowClassifierPerformance = function()
 {
   require(imager)
