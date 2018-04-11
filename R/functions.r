@@ -242,3 +242,64 @@ GetSampleData = function(DataType)
 
 
 
+#' Run FIT improvement prediction classifier 
+#' 
+#' The SVM classifier predicts whether FIT will be able to improve a spcific mouse data
+#' 
+#' @param MouseFile File name that includes the mouse data, in CSV format 
+#' @param qval the q-value cuttoff the user will use to interperct FIT's predictions. (default= 0.1)
+#' @param FC the fold-cahnge cuttoff the user will use to interperct FIT's predictions, given as fraction from the top. For example, 
+#'            0.15 denotes the top 15% of genes with highest fold-change. (default= 0.15)
+RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
+{
+  # Input checks
+  if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
+  qvals = c(0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4,0.5,0.6,0.7,0.8,0.9,1)
+  FCs = c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25,0.3,0.35,0.4)
+  if(!qval %in%  qvals) stop(paste0("q-value should be one of the following:\n", paste(qvals, collapse = " ")))
+  if(!FC %in%  FCs) stop(paste0("The fold-change should be one of the following:\n", paste(FCs, collapse = " ")))
+  
+  MouseData = read.table(MouseFile, sep=",", header=T)  # load("../data/microarray_sample.rda"); MouseData= microarray_sample; rm(microarray_sample)
+  
+  # Creating PC point from input mouse data
+  rotations_init = pca_rotations  # load("../data/classifier/pca_rotations.rda"); rotations_init = pca_rotations; rm(pca_rotations)
+  intersection_genes = rownames(MouseData)[rownames(MouseData) %in% rownames(rotations_init)]
+  message("The mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(rotations_init)," genes.",
+          "\nThe current run will be based on ", length(intersection_genes), " genes (intersection between the current data and the classifier set of genes.")
+  rotations = rotations_init[intersection_genes,]
+  MouseData = MouseData[intersection_genes,]
+  
+  dis_samp = grep("d_*", colnames(MouseData), perl = T)
+  cont_samp = grep("c_*", colnames(MouseData), perl = T)
+  FC_Mouse = t(as.data.frame(apply(MouseData, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})))
+  
+  MM_pca_point = FC_Mouse %*% rotations[,1:50]
+  
+  # Running classifier
+  require("e1071")
+  best_mod = best_models  # load("../data/classifier/best_models.rda"); best_mod = best_models; rm(best_models)
+  
+  classifier = best_mod[[paste0(FC, "_", qval)]]
+  pred_res = as.character(predict(classifier, newdata = MM_pca_point))
+
+  if(pred_res == 0) message("It is unlikely FIT will be able to improve this dataset.")
+  else message("FIT will likely improve this dataset.")
+  
+  message("See the performance results of the classifier to identify the performance of the classifier in the selected set of theesholds (Fold-change=",
+          FC,", q-value=",qval,")")
+  ShowClassifierPerformance()
+  
+}
+
+
+
+ShowClassifierPerformance = function()
+{
+  require(imager)
+  im <- load.image("../data/classifier/ClassifierPerformance.PNG")
+  plot(im, axes = F, )
+}
+
+
+
+
