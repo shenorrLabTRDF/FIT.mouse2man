@@ -1,6 +1,6 @@
 Package: FIT
 Title: Predicts human disease relevant genes from mouse model gene expression, based on prior mouse and human gene expression comparisons
-Version: 1.0
+Version: 1.0.1
 Authors@R: person("Rachelly", "Normand", email = "rachelly@campus.technion.ac.il", role = c("aut", "cre"))
 Description: -
 Depends: R (>= 3.3.2)
