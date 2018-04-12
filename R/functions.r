@@ -257,7 +257,7 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   MouseData = read.table(MouseFile, sep=",", header=T)  # load("../data/microarray_sample.rda"); MouseData= microarray_sample; rm(microarray_sample)
   
   # Creating PC point from input mouse data
-  rotations_init = pca_rotations  # load("../data/classifier/pca_rotations.rda"); rotations_init = pca_rotations; rm(pca_rotations)
+  rotations_init = FIT:::pca_rotations  # load("../data/classifier/pca_rotations.rda"); rotations_init = pca_rotations; rm(pca_rotations)
   intersection_genes = rownames(MouseData)[rownames(MouseData) %in% rownames(rotations_init)]
   message("The mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(rotations_init)," genes.",
           "\nThe current run will be based on ", length(intersection_genes), " genes (intersection between the current data and the classifier set of genes.")
