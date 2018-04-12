@@ -6,3 +6,4 @@ Description: -
 Depends: R (>= 3.3.2)
 LazyData: true
 RoxygenNote: 6.0.1.9000
+License: Free use for academia. Restricted for commercial use.
