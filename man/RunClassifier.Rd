@@ -9,11 +9,11 @@ RunClassifier(MouseFile, qval = 0.1, FC = 0.15)
 \arguments{
 \item{MouseFile}{File name that includes the mouse data, in CSV format}
 
-\item{qval}{the q-value cuttoff the user will use to interperct FIT's predictions. (default= 0.1)}
+\item{qval}{the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)}
 
-\item{FC}{the fold-cahnge cuttoff the user will use to interperct FIT's predictions, given as fraction from the top. For example, 
+\item{FC}{the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
 0.15 denotes the top 15% of genes with highest fold-change. (default= 0.15)}
 }
 \description{
-The SVM classifier predicts whether FIT will be able to improve a spcific mouse data
+The SVM classifier predicts whether FIT will be able to improve a specific mouse data
 }

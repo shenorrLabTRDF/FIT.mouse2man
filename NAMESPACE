@@ -3,3 +3,5 @@
 export(FIT)
 export(GetRefData)
 export(GetSampleData)
+export(RunClassifier)
+export(ShowClassifierPerformance)
