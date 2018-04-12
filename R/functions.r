@@ -7,10 +7,10 @@
 #' (c) There are at least 3 disease samples and 3 control samples  (for microarray daat only)
 #' (d) The data i snot log-transformed (the range of values are either <0 or >100)  (for microarray daat only)
 #' @param MouseData The mouse data
+#' @param DataType 'microarray' or 'rnaseq'
 CheckFormat = function(MouseData, DataType)
 {
-  conv = MM_Entrez_symbol_desc
-  MM_entrez = conv[,"MM.Entrez"]
+  MM_entrez = MM_Entrez_symbol_desc[,"MM.Entrez"]
   if (DataType=="microarray") names = rownames(MouseData)
   else names = MouseData$MM.Entrez
   
@@ -52,8 +52,6 @@ CheckFormat = function(MouseData, DataType)
 #' @param MouseData The mouse data.
 PreProcess = function(MouseData)
 {
-  slopes_per_gene = slopes_per_gene_V2.0
-    
   dis_samp = grep("d_*", colnames(NewMouse), perl = T)
   cont_samp = grep("c_*", colnames(NewMouse), perl = T)
   FC_Mouse = apply(NewMouse, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})
@@ -80,8 +78,7 @@ PreProcess = function(MouseData)
   colnames(comb_data)=c("gene", "FC", "EffectSize")
   rownames(comb_data) = comb_data[,"gene"]
   comb_data = comb_data[,-1]
-  conv = MGD_orthologs
-  comb_data = merge(comb_data, conv, by.x=0, by.y="Mouse", all.x=T, all.y=F)
+  comb_data = merge(comb_data, MGD_orthologs, by.x=0, by.y="Mouse", all.x=T, all.y=F)
   colnames(comb_data) = c("MM.Entrez", "FC", "EffectSize", "HS.Entrez")
   
   return(comb_data)
@@ -98,12 +95,10 @@ PreProcess = function(MouseData)
 #'   * 
 ComputePredictions = function(NewMouse_df, DataType)
 {
-  slopes = slopes_per_gene_V2.0
-  
   # Computing predicitons
   predictions = sapply(NewMouse_df$MM.Entrez, function(g)
   {
-    curr_slopes = slopes[[g]]
+    curr_slopes = slopes_per_gene_V2.0[[g]]
     curr_slopes = curr_slopes[!is.na(curr_slopes)]
     if(length(curr_slopes) != 100) curr_slopes[(length(curr_slopes)+1):100]=NA
     
@@ -245,11 +240,10 @@ GetSampleData = function(DataType)
 #' Run FIT improvement prediction classifier 
 #' 
 #' The SVM classifier predicts whether FIT will be able to improve a specific mouse data
-#' 
 #' @param MouseFile File name that includes the mouse data, in CSV format 
 #' @param qval the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)
 #' @param FC the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
-#'            0.15 denotes the top 15% of genes with highest fold-change. (default= 0.15)
+#'            0.15 denotes the top 15\% of genes with highest fold-change. (default= 0.15)
 #' @export
 RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
 {
@@ -277,7 +271,7 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   MM_pca_point = FC_Mouse %*% rotations[,1:50]
   
   # Running classifier
-  require("e1071")
+  #require("e1071")
   best_mod = best_models  # load("../data/classifier/best_models.rda"); best_mod = best_models; rm(best_models)
   
   classifier = best_mod[[paste0(FC, "_", qval)]]
@@ -300,7 +294,7 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
 #' @export
 ShowClassifierPerformance = function()
 {
-  require(imager)
+  #require(imager)
   im <- load.image("../data/classifier/ClassifierPerformance.PNG")
   plot(im, axes = F, )
 }

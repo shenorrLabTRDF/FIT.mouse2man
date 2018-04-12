@@ -8,6 +8,8 @@ CheckFormat(MouseData, DataType)
 }
 \arguments{
 \item{MouseData}{The mouse data}
+
+\item{DataType}{'microarray' or 'rnaseq'}
 }
 \description{
 This function validates the format of the input mouse gene expression file is correct for process by FIT.

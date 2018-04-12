@@ -12,7 +12,7 @@ RunClassifier(MouseFile, qval = 0.1, FC = 0.15)
 \item{qval}{the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)}
 
 \item{FC}{the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
-0.15 denotes the top 15% of genes with highest fold-change. (default= 0.15)}
+0.15 denotes the top 15\% of genes with highest fold-change. (default= 0.15)}
 }
 \description{
 The SVM classifier predicts whether FIT will be able to improve a specific mouse data
