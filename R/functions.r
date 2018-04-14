@@ -10,6 +10,7 @@
 #' @param DataType 'microarray' or 'rnaseq'
 CheckFormat = function(MouseData, DataType)
 {
+  load("sysdata/MM_Entrez_symbol_desc.rda")
   MM_entrez = MM_Entrez_symbol_desc[,"MM.Entrez"]
   if (DataType=="microarray") names = rownames(MouseData)
   else names = MouseData$MM.Entrez
@@ -78,6 +79,7 @@ PreProcess = function(MouseData)
   colnames(comb_data)=c("gene", "FC", "EffectSize")
   rownames(comb_data) = comb_data[,"gene"]
   comb_data = comb_data[,-1]
+  load("sysdata/MGD_orthologs.rda")
   comb_data = merge(comb_data, MGD_orthologs, by.x=0, by.y="Mouse", all.x=T, all.y=F)
   colnames(comb_data) = c("MM.Entrez", "FC", "EffectSize", "HS.Entrez")
   
@@ -123,8 +125,8 @@ ComputePredictions = function(NewMouse_df, DataType)
   else colnames(final)[c(1,9)] = c("MM.Entrez", "Orig_Ztest")
   
   # Combining with human genes and details
-  conv = HS_MM_Symbol_Entrez
-  final_ann = merge(final, conv, by.x="MM.Entrez", by.y= "Mouse.Ortholog", all.x=T, all.y=F)
+  load("sysdata/HS_MM_Symbol_Entrez.rda")
+  final_ann = merge(final, HS_MM_Symbol_Entrez, by.x="MM.Entrez", by.y= "Mouse.Ortholog", all.x=T, all.y=F)
   if(DataType=="microarray")
   {
     colnames(final_ann) = c("Mouse.Entrez", "FIT_prediction",  "CI_low", "CI_high", "CI_size", "CI_percentile", "FIT_percentile", 
@@ -166,6 +168,7 @@ ComputePredictions = function(NewMouse_df, DataType)
 #' @export
 FIT = function(MouseFile, DataType)
 {
+  load("sysdata/slopes_per_gene_V2.0.rda")
   if((DataType != "microarray") & (DataType != "rnaseq")) stop("Error: DataType should be 'rnaseq' or 'microarray'.")
   if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
     
@@ -240,7 +243,7 @@ GetSampleData = function(DataType)
 #' Run FIT improvement prediction classifier 
 #' 
 #' The SVM classifier predicts whether FIT will be able to improve a specific mouse data
-#' @param MouseFile File name that includes the mouse data, in CSV format 
+#' @param MouseFile File name that includes the mouse data (log expression per gene for all disease and control sampels), in CSV format 
 #' @param qval the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)
 #' @param FC the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
 #'            0.15 denotes the top 15\% of genes with highest fold-change. (default= 0.15)
@@ -254,14 +257,14 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   if(!qval %in%  qvals) stop(paste0("q-value should be one of the following:\n", paste(qvals, collapse = " ")))
   if(!FC %in%  FCs) stop(paste0("The fold-change should be one of the following:\n", paste(FCs, collapse = " ")))
   
-  MouseData = read.table(MouseFile, sep=",", header=T)  # load("../data/microarray_sample.rda"); MouseData= microarray_sample; rm(microarray_sample)
+  MouseData = read.table(MouseFile, sep=",", header=T)  # load("../sysdata/microarray_sample.rda"); MouseData= microarray_sample; rm(microarray_sample)
   
   # Creating PC point from input mouse data
-  rotations_init = FIT:::pca_rotations  # load("../data/classifier/pca_rotations.rda"); rotations_init = pca_rotations; rm(pca_rotations)
-  intersection_genes = rownames(MouseData)[rownames(MouseData) %in% rownames(rotations_init)]
-  message("The mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(rotations_init)," genes.",
+  load("sysdata/pca_rotations.rda")
+  intersection_genes = rownames(MouseData)[rownames(MouseData) %in% rownames(pca_rotations)]
+  message("The mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(pca_rotations)," genes.",
           "\nThe current run will be based on ", length(intersection_genes), " genes (intersection between the current data and the classifier set of genes.")
-  rotations = rotations_init[intersection_genes,]
+  rotations = pca_rotations[intersection_genes,]
   MouseData = MouseData[intersection_genes,]
   
   dis_samp = grep("d_*", colnames(MouseData), perl = T)
@@ -271,14 +274,15 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   MM_pca_point = FC_Mouse %*% rotations[,1:50]
   
   # Running classifier
-  #require("e1071")
-  best_mod = best_models  # load("../data/classifier/best_models.rda"); best_mod = best_models; rm(best_models)
-  
-  classifier = best_mod[[paste0(FC, "_", qval)]]
+  load("sysdata/best_models.rda")
+  classifier = best_models[[paste0(FC, "_", qval)]]
   pred_res = as.character(predict(classifier, newdata = MM_pca_point))
 
+  # Providing results
+  message("\n*************************  Classifier prediction  **************************")
   if(pred_res == 0) message("It is unlikely FIT will be able to improve this dataset.")
   else message("FIT will likely improve this dataset.")
+  message("****************************************************************************\n")
   
   message("See the performance results of the classifier to identify the performance of the classifier in the selected set of theesholds (Fold-change=",
           FC,", q-value=",qval,")")
@@ -294,9 +298,8 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
 #' @export
 ShowClassifierPerformance = function()
 {
-  #require(imager)
-  im <- load.image("../data/classifier/ClassifierPerformance.PNG")
-  plot(im, axes = F, )
+  im <- load.image("inst/ClassifierPerformance.PNG")
+  plot(im, axes = F)
 }
 
 
