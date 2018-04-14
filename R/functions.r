@@ -93,8 +93,8 @@ PreProcess = function(MouseData)
 #' This function computes the predictions from a pre-processed mouse dataset and the slopes computed for the reference data. 
 #' In the process confidence intervals are computed as well per gene.
 #' @param NewMouse_df The pre-processed mouse dataset
-#' #' @return A dataframe including the following columns:
-#'   * 
+#' @param DataType The technology used: microarray/ rnaseq
+#' @return A dataframe including gene IDs, FIT's prediction, CI size, FIT percentile, mouse and human FC and effect-size 
 ComputePredictions = function(NewMouse_df, DataType)
 {
   # Computing predicitons
@@ -287,7 +287,6 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   message("See the performance results of the classifier to identify the performance of the classifier in the selected set of theesholds (Fold-change=",
           FC,", q-value=",qval,")")
   ShowClassifierPerformance()
-  
 }
 
 

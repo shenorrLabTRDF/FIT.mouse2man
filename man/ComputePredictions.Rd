@@ -7,9 +7,12 @@
 ComputePredictions(NewMouse_df, DataType)
 }
 \arguments{
-\item{NewMouse_df}{The pre-processed mouse dataset
-#' @return A dataframe including the following columns:
-  *}
+\item{NewMouse_df}{The pre-processed mouse dataset}
+
+\item{DataType}{The technology used: microarray/ rnaseq}
+}
+\value{
+A dataframe including gene IDs, FIT's prediction, CI size, FIT percentile, mouse and human FC and effect-size
 }
 \description{
 This function computes the predictions from a pre-processed mouse dataset and the slopes computed for the reference data. 

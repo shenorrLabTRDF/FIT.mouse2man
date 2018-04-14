@@ -10,7 +10,7 @@
 #'   \item{MM.Entrez}{Mouse Entrez ID}
 #'   \item{HS.Entrez}{Human Entrez ID}
 #'   \item{FC.HS}{Human fold-change}
-#'   \item{MM.HS}{Mouse fold-change}
+#'   \item{FC.MM}{Mouse fold-change}
 #'   \item{EffSize.HS}{Human effect size}
 #'   \item{EffSize.MM}{Mouse effect size}
 #'   \item{qval.HS}{Human q-value}

@@ -7,7 +7,7 @@
 RunClassifier(MouseFile, qval = 0.1, FC = 0.15)
 }
 \arguments{
-\item{MouseFile}{File name that includes the mouse data, in CSV format}
+\item{MouseFile}{File name that includes the mouse data (log expression per gene for all disease and control sampels), in CSV format}
 
 \item{qval}{the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)}
 
