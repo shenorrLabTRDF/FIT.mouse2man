@@ -8,6 +8,7 @@
 #' (d) The data i snot log-transformed (the range of values are either <0 or >100)  (for microarray daat only)
 #' @param MouseData The mouse data
 #' @param DataType 'microarray' or 'rnaseq'
+#' @export
 CheckFormat = function(MouseData, DataType)
 {
   load("sysdata/MM_Entrez_symbol_desc.rda")
@@ -51,6 +52,7 @@ CheckFormat = function(MouseData, DataType)
 #' c) Computing Z-tests per gene
 #' d) Merging human orthologs
 #' @param MouseData The mouse data.
+#' @export
 PreProcess = function(MouseData)
 {
   dis_samp = grep("d_*", colnames(NewMouse), perl = T)
@@ -95,6 +97,7 @@ PreProcess = function(MouseData)
 #' @param NewMouse_df The pre-processed mouse dataset
 #' @param DataType The technology used: microarray/ rnaseq
 #' @return A dataframe including gene IDs, FIT's prediction, CI size, FIT percentile, mouse and human FC and effect-size 
+#' @export
 ComputePredictions = function(NewMouse_df, DataType)
 {
   # Computing predicitons
