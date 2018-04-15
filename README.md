@@ -1,4 +1,4 @@
-# FIT_mouse2man
+# FIT.mouse2man
 
 Cross-species differences form barriers to translational research that ultimately hinder the success of clinical trials. 
 Yet systematic incorporation of the wealth of knowledge on species differences in the interpretation of animal model data 
@@ -16,8 +16,30 @@ library(devtools)
 
 Install FIT_mouse2man and load it:
 ```
-install_github("RachellyN/FIT_mouse2man")
-library(FIT_mouse2man)
+require(devtools)
+devtools::install_github('shenorrLab/FIT.mouse2man')
+```
+
+### Checking applicability of the model to your data
+FIT is able to improve the similarity to human data in a wide variety of diseases, yet not in all of them. FIT's performance relies, among other features, on the mouse input data. To allow users to know in advance whether FIT is likely or unlikely to improve the similarity of their mouse experiment to human data, we created an SVM classifier that predicts FIT performance. The classifier is accurate on avrage in 80% of tested cases.
+The classifier is given:
+ - The mouse data file in CSV format (see below).
+ - q-value threshold - the q-value by which differential genes are going to be defined (Default: 0.1).
+ - Fold-change threshold - the fold-change by which differential genes are going to be defined. The fold-change is defined as fraction of genes from the top. For example, fold-chnage=0.15 denotes 15% of the genes with highest absolute fold-chnage (Default: 0.15).
+ The latter two parameters are not used in any analysis done by the package, but affect the classifier response space.
+ 
+Example: 
+```
+> RunClassifier("MyMouseData.csv")
+The mouse data contains 11545 genes.
+The classifier can be based on 4957 genes.
+The current run will be based on 4957 genes (intersection between the current data and the classifier set of genes.
+
+*************************  Classifier prediction  **************************
+It is unlikely FIT will be able to improve this dataset.
+****************************************************************************
+
+See the performance results of the classifier to identify the performance of the classifier in the selected set of theesholds (Fold-change=0.15, q-value=0.1)
 ```
 
 ### Input data
