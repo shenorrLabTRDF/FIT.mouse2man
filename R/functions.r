@@ -6,17 +6,15 @@
 #' (b) Sample names don't start with "c_" or "d_"  (for microarray daat only)
 #' (c) There are at least 3 disease samples and 3 control samples  (for microarray daat only)
 #' (d) The data i snot log-transformed (the range of values are either <0 or >100)  (for microarray daat only)
-#' @param MouseData A data.frame containing the mouse data. The first column are gene Entrez IDs and the rest of the columns are samples starting with either "c_" (for control) or  "d_" (for disease)
+#' @param MouseData The mouse data
 #' @param DataType 'microarray' or 'rnaseq'
 #' @export
 CheckFormat = function(MouseData, DataType)
 {
-  if(class(MouseData) != "data.frame") stop("Error: MouseData should be of class data.frame")
-  if(class(DataType) != "character") stop("Error: DataType should be of class character")
-  if ((DataType != "microarray") & (DataType != "rnaseq")) stop("Error: DataType should either be 'microarray' or 'rnaseq'")
-  load("data/MM_Entrez_symbol_desc.rda")
+  load("sysdata/MM_Entrez_symbol_desc.rda")
   MM_entrez = MM_Entrez_symbol_desc[,"MM.Entrez"]
-  names = rownames(MouseData)
+  if (DataType=="microarray") names = rownames(MouseData)
+  else names = MouseData$MM.Entrez
   
   per = sum(names %in% MM_entrez)*100/length(names)
   if (per<80) stop("Error: Data not in a correct format: Less than 80% of the row names are Entrez ID")
@@ -57,12 +55,10 @@ CheckFormat = function(MouseData, DataType)
 #' @export
 PreProcess = function(MouseData)
 {
-  if(class(MouseData) != "data.frame") stop("Error: MouseData should be of class data.frame")
-  
-  dis_samp = grep("d_*", colnames(MouseData), perl = T)
-  cont_samp = grep("c_*", colnames(MouseData), perl = T)
-  FC_Mouse = apply(MouseData, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})
-  Zscore_Mouse = apply(MouseData, 2L, function(col) {(col - mean(col, na.rm = T))/sd(col, na.rm = T) })
+  dis_samp = grep("d_*", colnames(NewMouse), perl = T)
+  cont_samp = grep("c_*", colnames(NewMouse), perl = T)
+  FC_Mouse = apply(NewMouse, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})
+  Zscore_Mouse = apply(NewMouse, 2L, function(col) {(col - mean(col, na.rm = T))/sd(col, na.rm = T) })
     
   dis_n = length(dis_samp)
   con_n = length(cont_samp)
@@ -85,7 +81,7 @@ PreProcess = function(MouseData)
   colnames(comb_data)=c("gene", "FC", "EffectSize")
   rownames(comb_data) = comb_data[,"gene"]
   comb_data = comb_data[,-1]
-  load("data/MGD_orthologs.rda")
+  load("sysdata/MGD_orthologs.rda")
   comb_data = merge(comb_data, MGD_orthologs, by.x=0, by.y="Mouse", all.x=T, all.y=F)
   colnames(comb_data) = c("MM.Entrez", "FC", "EffectSize", "HS.Entrez")
   
@@ -104,10 +100,6 @@ PreProcess = function(MouseData)
 #' @export
 ComputePredictions = function(NewMouse_df, DataType)
 {
-  if(class(NewMouse_df) != "data.frame") stop("Error: MouseData should be of class data.frame")
-  if(class(DataType) != "character") stop("Error: DataType should be of class character")
-  if ((DataType != "microarray") & (DataType != "rnaseq")) stop("Error: DataType should either be 'microarray' or 'rnaseq'")
-  
   # Computing predicitons
   predictions = sapply(NewMouse_df$MM.Entrez, function(g)
   {
@@ -136,7 +128,7 @@ ComputePredictions = function(NewMouse_df, DataType)
   else colnames(final)[c(1,9)] = c("MM.Entrez", "Orig_Ztest")
   
   # Combining with human genes and details
-  load("data/HS_MM_Symbol_Entrez.rda")
+  load("sysdata/HS_MM_Symbol_Entrez.rda")
   final_ann = merge(final, HS_MM_Symbol_Entrez, by.x="MM.Entrez", by.y= "Mouse.Ortholog", all.x=T, all.y=F)
   if(DataType=="microarray")
   {
@@ -179,16 +171,18 @@ ComputePredictions = function(NewMouse_df, DataType)
 #' @export
 FIT = function(MouseFile, DataType)
 {
-  load("data/slopes_per_gene_V2.0.rda")
+  load("sysdata/slopes_per_gene_V2.0.rda")
   if((DataType != "microarray") & (DataType != "rnaseq")) stop("Error: DataType should be 'rnaseq' or 'microarray'.")
   if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
     
   message("Step 1:\nUploading input data and checking data format")
-  
-  MouseData = read.table(MouseFile, sep=",", header=T)
-  if(DataType=="rnaseq") colnames(MouseData) = c("MM.Entrez","EffectSize")
-  MouseData$MM.Entrez = as.character(MouseData$MM.Entrez)
-  rownames(MouseData) = MouseData$MM.Entrez 
+  if(DataType=="microarray") MouseData = read.table(MouseFile, sep=",", header=T, row.names = 1)
+  else 
+    {
+      MouseData = read.table(MouseFile, sep=",", header=T)
+      colnames(MouseData) = c("MM.Entrez","EffectSize")
+      MouseData$MM.Entrez = as.character(MouseData$MM.Entrez)
+    }
   Err = CheckFormat(MouseData, DataType)
   message(Err)
   
@@ -266,10 +260,10 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   if(!qval %in%  qvals) stop(paste0("q-value should be one of the following:\n", paste(qvals, collapse = " ")))
   if(!FC %in%  FCs) stop(paste0("The fold-change should be one of the following:\n", paste(FCs, collapse = " ")))
   
-  MouseData = read.table(MouseFile, sep=",", header=T)  # load("../data/microarray_sample.rda"); MouseData= microarray_sample; rm(microarray_sample)
+  MouseData = read.table(MouseFile, sep=",", header=T)  # load("../sysdata/microarray_sample.rda"); MouseData= microarray_sample; rm(microarray_sample)
   
   # Creating PC point from input mouse data
-  load("data/pca_rotations.rda")
+  load("sysdata/pca_rotations.rda")
   intersection_genes = rownames(MouseData)[rownames(MouseData) %in% rownames(pca_rotations)]
   message("The mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(pca_rotations)," genes.",
           "\nThe current run will be based on ", length(intersection_genes), " genes (intersection between the current data and the classifier set of genes.")
@@ -283,7 +277,7 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   MM_pca_point = FC_Mouse %*% rotations[,1:50]
   
   # Running classifier
-  load("data/best_models.rda")
+  load("sysdata/best_models.rda")
   classifier = best_models[[paste0(FC, "_", qval)]]
   pred_res = as.character(predict(classifier, newdata = MM_pca_point))
 
