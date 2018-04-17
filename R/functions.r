@@ -11,7 +11,8 @@
 #' @export
 CheckFormat = function(MouseData, DataType)
 {
-  data("sysdata/MM_Entrez_symbol_desc.rda", package = "FIT.mouse2man")
+  data(AllData_V2.0)
+  data(MM_Entrez_symbol_desc)
   MM_entrez = MM_Entrez_symbol_desc[,"MM.Entrez"]
   if (DataType=="microarray") names = rownames(MouseData)
   else names = MouseData$MM.Entrez
@@ -81,7 +82,7 @@ PreProcess = function(MouseData)
   colnames(comb_data)=c("gene", "FC", "EffectSize")
   rownames(comb_data) = comb_data[,"gene"]
   comb_data = comb_data[,-1]
-  load("sysdata/MGD_orthologs.rda")
+  data(MGD_orthologs)
   comb_data = merge(comb_data, MGD_orthologs, by.x=0, by.y="Mouse", all.x=T, all.y=F)
   colnames(comb_data) = c("MM.Entrez", "FC", "EffectSize", "HS.Entrez")
   
@@ -128,7 +129,7 @@ ComputePredictions = function(NewMouse_df, DataType)
   else colnames(final)[c(1,9)] = c("MM.Entrez", "Orig_Ztest")
   
   # Combining with human genes and details
-  load("sysdata/HS_MM_Symbol_Entrez.rda")
+  data(HS_MM_Symbol_Entrez)
   final_ann = merge(final, HS_MM_Symbol_Entrez, by.x="MM.Entrez", by.y= "Mouse.Ortholog", all.x=T, all.y=F)
   if(DataType=="microarray")
   {
@@ -171,7 +172,7 @@ ComputePredictions = function(NewMouse_df, DataType)
 #' @export
 FIT = function(MouseFile, DataType)
 {
-  load("sysdata/slopes_per_gene_V2.0.rda")
+  data(slopes_per_gene_V2.0)
   if((DataType != "microarray") & (DataType != "rnaseq")) stop("Error: DataType should be 'rnaseq' or 'microarray'.")
   if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
     
@@ -260,10 +261,10 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   if(!qval %in%  qvals) stop(paste0("q-value should be one of the following:\n", paste(qvals, collapse = " ")))
   if(!FC %in%  FCs) stop(paste0("The fold-change should be one of the following:\n", paste(FCs, collapse = " ")))
   
-  MouseData = read.table(MouseFile, sep=",", header=T)  # load("../sysdata/microarray_sample.rda"); MouseData= microarray_sample; rm(microarray_sample)
+  MouseData = read.table(MouseFile, sep=",", header=T)  
   
   # Creating PC point from input mouse data
-  load("sysdata/pca_rotations.rda")
+  data(pca_rotations)
   intersection_genes = rownames(MouseData)[rownames(MouseData) %in% rownames(pca_rotations)]
   message("The mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(pca_rotations)," genes.",
           "\nThe current run will be based on ", length(intersection_genes), " genes (intersection between the current data and the classifier set of genes.")
@@ -277,7 +278,7 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   MM_pca_point = FC_Mouse %*% rotations[,1:50]
   
   # Running classifier
-  load("sysdata/best_models.rda")
+  data(best_models)
   classifier = best_models[[paste0(FC, "_", qval)]]
   pred_res = as.character(predict(classifier, newdata = MM_pca_point))
 
