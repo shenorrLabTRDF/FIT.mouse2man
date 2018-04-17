@@ -11,7 +11,7 @@
 #' @export
 CheckFormat = function(MouseData, DataType)
 {
-  load("sysdata/MM_Entrez_symbol_desc.rda")
+  data("sysdata/MM_Entrez_symbol_desc.rda", package = "FIT.mouse2man")
   MM_entrez = MM_Entrez_symbol_desc[,"MM.Entrez"]
   if (DataType=="microarray") names = rownames(MouseData)
   else names = MouseData$MM.Entrez
