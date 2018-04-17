@@ -1,3 +1,20 @@
+#' Check input file 
+#'
+#' This function validates that the input file exists and contain a valid number of genes in the first row
+#' @param MouseFile The mouse data file
+#' @export
+CheckFile = function(MouseFile)
+{
+  if(!(file.exists(MouseFile))) stop(paste0("Error: input file (",MouseFile,") doesn't exist"))
+  data = read.table(MouseFile, sep=",", header=1)
+  if(any(duplicated(data[,1]))) stop("Error: The mouse data contains duplicated gene names.")
+  if(any(is.na(data[,1]))) stop("Error: The mouse data contains missing gene names.")
+  rownames(data) = data[,1]
+  
+  data
+}
+
+
 #' Check input file format
 #'
 #' This function validates the format of the input mouse gene expression file is correct for process by FIT.
@@ -6,41 +23,39 @@
 #' (b) Sample names don't start with "c_" or "d_"  (for microarray daat only)
 #' (c) There are at least 3 disease samples and 3 control samples  (for microarray daat only)
 #' (d) The data i snot log-transformed (the range of values are either <0 or >100)  (for microarray daat only)
-#' @param MouseData The mouse data
+#' @param MouseData The mouse data, in CSV format
 #' @param DataType 'microarray' or 'rnaseq'
 #' @export
 CheckFormat = function(MouseData, DataType)
 {
-  data(AllData_V2.0)
   data(MM_Entrez_symbol_desc)
   MM_entrez = MM_Entrez_symbol_desc[,"MM.Entrez"]
-  if (DataType=="microarray") names = rownames(MouseData)
-  else names = MouseData$MM.Entrez
+  names = rownames(MouseData)
+  if(DataType=="microarray") MouseData = MouseData[,-1]
   
+  # Checking format
   per = sum(names %in% MM_entrez)*100/length(names)
-  if (per<80) stop("Error: Data not in a correct format: Less than 80% of the row names are Entrez ID")
+  if (per<80) return("Error: Data not in a correct format: Less than 80% of the row names are Entrez ID")
   else
   {
-    if(DataType=="rnaseq") err = "\n\nSuccess: The data is in the correct format.\nThe next step is to run the analysis."
+    if(DataType=="rnaseq") return("Success: The data is in the correct format.")
     else
     {
       samp_names = colnames(MouseData)
-      if(length(grep("c_*|d_*", samp_names, perl = T, invert = T))>0)
-        stop("Error: The data not in a correct format: All sample names (colnames) should start with c_ or d_.")
+      if(length(grep("c_*|d_*", samp_names, perl = T, invert = T)) == length(samp_names))
+        return("Error: The data not in a correct format: All sample names (colnames) should start with c_ or d_.")
       else 
         if(sum(grepl("c_*", samp_names, perl = T))<3)
-          stop("Error: The data not in a correct format: There are less than 3 control samples.")
+          return("Error: The data not in a correct format: There are less than 3 control samples.")
         else
           if(sum(grepl("d_*", samp_names, perl = T))<3)
-            stop("Error: The data not in a correct format: There are less than 3 disease samples.")
+            return("Error: The data not in a correct format: There are less than 3 disease samples.")
           else
             if ((range(MouseData)[1]<0) || range(MouseData)[2]>100)
-              stop("Error: The data not in a correct format: It is not logged transformed.")
-            else
-              err = "Success: The data is in the correct format."
+              return("Error: The data not in a correct format: It is not logged transformed.")
     }
   }
-  return(err)
+  return("Success: The data is in the correct format.")
 }
 
 
@@ -177,15 +192,8 @@ FIT = function(MouseFile, DataType)
   if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
     
   message("Step 1:\nUploading input data and checking data format")
-  if(DataType=="microarray") MouseData = read.table(MouseFile, sep=",", header=T, row.names = 1)
-  else 
-    {
-      MouseData = read.table(MouseFile, sep=",", header=T)
-      colnames(MouseData) = c("MM.Entrez","EffectSize")
-      MouseData$MM.Entrez = as.character(MouseData$MM.Entrez)
-    }
-  Err = CheckFormat(MouseData, DataType)
-  message(Err)
+  MouseData = CheckFile(MouseFile, DataType)
+  CheckFormat(MouseData, DataType)
   
   if (DataType=="microarray") NewMouse_df = MouseData[rownames(MouseData) %in% names(slopes_per_gene_V2.0),]
   else NewMouse_df = MouseData[MouseData$MM.Entrez %in% names(slopes_per_gene_V2.0),]

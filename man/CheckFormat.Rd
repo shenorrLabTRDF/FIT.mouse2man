@@ -7,7 +7,7 @@
 CheckFormat(MouseData, DataType)
 }
 \arguments{
-\item{MouseData}{The mouse data}
+\item{MouseData}{The mouse data, in CSV format}
 
 \item{DataType}{'microarray' or 'rnaseq'}
 }
