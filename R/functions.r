@@ -1,15 +1,18 @@
 #' Check input file 
 #'
 #' This function validates that the input file exists and contain a valid number of genes in the first row
+#' It converts the rownames to the gene names, and for microarray data removes the first column (gene names)
 #' @param MouseFile The mouse data file
+#' @param DataType 'microarray' or 'rnaseq'
 #' @export
-CheckFile = function(MouseFile)
+CheckFile = function(MouseFile, DataType)
 {
   if(!(file.exists(MouseFile))) stop(paste0("Error: input file (",MouseFile,") doesn't exist"))
   data = read.table(MouseFile, sep=",", header=1)
   if(any(duplicated(data[,1]))) stop("Error: The mouse data contains duplicated gene names.")
   if(any(is.na(data[,1]))) stop("Error: The mouse data contains missing gene names.")
   rownames(data) = data[,1]
+  if(DataType=="microarray") data = data[,-1]
   
   data
 }
@@ -30,29 +33,28 @@ CheckFormat = function(MouseData, DataType)
 {
   data(MM_Entrez_symbol_desc)
   MM_entrez = MM_Entrez_symbol_desc[,"MM.Entrez"]
-  names = rownames(MouseData)
-  if(DataType=="microarray") MouseData = MouseData[,-1]
+  MouseData_genes = rownames(MouseData)
   
-  # Checking format
-  per = sum(names %in% MM_entrez)*100/length(names)
-  if (per<80) return("Error: Data not in a correct format: Less than 80% of the row names are Entrez ID")
+    # Checking format
+  per = sum(MouseData_genes %in% MM_entrez)*100/length(MouseData_genes)
+  if (per<80) stop("Error: Data not in a correct format: Less than 80% of the row names are Entrez ID")
   else
   {
     if(DataType=="rnaseq") return("Success: The data is in the correct format.")
     else
     {
       samp_names = colnames(MouseData)
-      if(length(grep("c_*|d_*", samp_names, perl = T, invert = T)) == length(samp_names))
-        return("Error: The data not in a correct format: All sample names (colnames) should start with c_ or d_.")
+      if(length(grep("c_*|d_*", samp_names, perl = T)) != length(samp_names))
+        stop("Error: The data not in a correct format: All sample names (colnames) should start with c_ or d_.")
       else 
         if(sum(grepl("c_*", samp_names, perl = T))<3)
-          return("Error: The data not in a correct format: There are less than 3 control samples.")
+          stop("Error: The data not in a correct format: There are less than 3 control samples.")
         else
           if(sum(grepl("d_*", samp_names, perl = T))<3)
-            return("Error: The data not in a correct format: There are less than 3 disease samples.")
+            stop("Error: The data not in a correct format: There are less than 3 disease samples.")
           else
             if ((range(MouseData)[1]<0) || range(MouseData)[2]>100)
-              return("Error: The data not in a correct format: It is not logged transformed.")
+              stop("Error: The data not in a correct format: It is not logged transformed.")
     }
   }
   return("Success: The data is in the correct format.")
@@ -245,9 +247,11 @@ GetRefData = function()
 #' @export
 GetSampleData = function(DataType)
 {
+  if ((DataType!="rnaseq")&(DataType!="microarray")) stop("Error: DataType should be 'rnaseq' or 'microarray'.")
+  data(RNAseq_sample)
+  data(microarray_sample)
   if(DataType == "rnaseq") write.table(RNAseq_sample, "SampleRNAseq.csv", sep=",", quote = F, row.names = F)
-  else if(DataType == "microarray") write.table(microarray_sample, "SampleMicroarray.csv", sep=",", quote = F, row.names = F)
-  else  stop("Error: DataType should be 'rnaseq' or 'microarray'.")
+  else write.table(microarray_sample, "SampleMicroarray.csv", sep=",", quote = F, row.names = F)
 }
 
 

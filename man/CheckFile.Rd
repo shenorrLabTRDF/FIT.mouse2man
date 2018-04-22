@@ -4,11 +4,14 @@
 \alias{CheckFile}
 \title{Check input file}
 \usage{
-CheckFile(MouseFile)
+CheckFile(MouseFile, DataType)
 }
 \arguments{
 \item{MouseFile}{The mouse data file}
+
+\item{DataType}{'microarray' or 'rnaseq'}
 }
 \description{
 This function validates that the input file exists and contain a valid number of genes in the first row
+It converts the rownames to the gene names, and for microarray data removes the first column (gene names)
 }
