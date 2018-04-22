@@ -17,3 +17,28 @@
 #'   \item{qval.MM}{Mouse q-value}
 #' }
 "AllData_V2.0"
+
+#' A data.frame containing the Entrez IDs of human and mouse orthologs
+"HS_MM_Symbol_Entrez"
+
+#' A data.frame containing the Entrez IDs of human and mouse orthologs
+"MGD_orthologs"
+
+#' A data.frame containing the symbols of human and mouse orthologs and a description per gene
+"MM_Entrez_symbol_desc"
+
+#' A list of the best predictive model for FIT's perforemance per threhsolds pair (fold-change and q-value)
+"best_models"
+
+#' The rotations needed to convert a vector of fold-changes to a dot on the PC space of all cross-species pairs in the training data
+"pca_rotations"
+
+#' The slopes derived from the linear regression FIT computed from human and mouse data, per gene. This is used for the prediciton of human effect size values.
+"slopes_per_gene_V2.0"
+
+#' Microarray sample data
+"microarray_sample"
+
+#' RNAseq sample data
+"RNAseq_sample"
+
