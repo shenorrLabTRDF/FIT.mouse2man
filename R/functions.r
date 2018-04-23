@@ -37,7 +37,7 @@ CheckFormat = function(MouseData, DataType)
   
     # Checking format
   per = sum(MouseData_genes %in% MM_entrez)*100/length(MouseData_genes)
-  if (per<80) stop("Error: Data not in a correct format: Less than 80% of the row names are Entrez ID")
+  if (per<80) stop("Error: The data is not in the  correct format - less than 80% of the row names are Entrez IDs.")
   else
   {
     if(DataType=="rnaseq") return("Success: The data is in the correct format.")
@@ -45,16 +45,16 @@ CheckFormat = function(MouseData, DataType)
     {
       samp_names = colnames(MouseData)
       if(length(grep("c_*|d_*", samp_names, perl = T)) != length(samp_names))
-        stop("Error: The data not in a correct format: All sample names (colnames) should start with c_ or d_.")
+        stop("Error: The data is not in the correct format - all sample names (colnames) should start with c_ or d_.")
       else 
         if(sum(grepl("c_*", samp_names, perl = T))<3)
-          stop("Error: The data not in a correct format: There are less than 3 control samples.")
+          stop("Error: The data is not in the correct format - there are less than 3 control samples.")
         else
           if(sum(grepl("d_*", samp_names, perl = T))<3)
-            stop("Error: The data not in a correct format: There are less than 3 disease samples.")
+            stop("Error: The data is not in the correct format - there are less than 3 disease samples.")
           else
             if ((range(MouseData)[1]<0) || range(MouseData)[2]>100)
-              stop("Error: The data not in a correct format: It is not logged transformed.")
+              stop("Error: The data is not in the correct format - the values are not logged transformed.")
     }
   }
   return("Success: The data is in the correct format.")
@@ -73,10 +73,10 @@ CheckFormat = function(MouseData, DataType)
 #' @export
 PreProcess = function(MouseData)
 {
-  dis_samp = grep("d_*", colnames(NewMouse), perl = T)
-  cont_samp = grep("c_*", colnames(NewMouse), perl = T)
-  FC_Mouse = apply(NewMouse, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})
-  Zscore_Mouse = apply(NewMouse, 2L, function(col) {(col - mean(col, na.rm = T))/sd(col, na.rm = T) })
+  dis_samp = grep("d_*", colnames(MouseData), perl = T)
+  cont_samp = grep("c_*", colnames(MouseData), perl = T)
+  FC_Mouse = apply(MouseData, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})
+  Zscore_Mouse = apply(MouseData, 2L, function(col) {(col - mean(col, na.rm = T))/sd(col, na.rm = T) })
     
   dis_n = length(dis_samp)
   con_n = length(cont_samp)
