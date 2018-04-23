@@ -78,7 +78,6 @@ PreProcess = function(MouseData, DataType)
 {
   data(slopes_per_gene_V2.0)
   NewMouse_df = MouseData[rownames(MouseData) %in% names(slopes_per_gene_V2.0),]
-  NewMouse_df$MM.Entrez = as.character(NewMouse_df$MM.Entrez)
   message("\nInitial number of genes: ",nrow(MouseData), "\nNumber of genes for which FIT predictions will be calculated: ", nrow(NewMouse_df))
   
   if (DataType == "rnaseq") return(NewMouse_df)
@@ -108,6 +107,8 @@ PreProcess = function(MouseData, DataType)
     
     comb_data = merge(FC_Mouse, Z_test_standard, by=0) 
     colnames(comb_data)=c("MM.Entrez", "FC", "EffectSize")
+    rownames(comb_data) = comb_data$MM.Entrez
+    comb_data = comb_data[,-1]
     return(comb_data)
   }
   
@@ -127,13 +128,13 @@ PreProcess = function(MouseData, DataType)
 ComputePredictions = function(NewMouse_df, DataType)
 {
   # Computing predicitons
-  predictions = sapply(NewMouse_df$MM.Entrez, function(g)
+  predictions = sapply(rownames(NewMouse_df), function(g)
   {
     curr_slopes = slopes_per_gene_V2.0[[g]]
     curr_slopes = curr_slopes[!is.na(curr_slopes)]
     if(length(curr_slopes) != 100) curr_slopes[(length(curr_slopes)+1):100]=NA
     
-    curr_MM = subset(NewMouse_df, MM.Entrez==g, "EffectSize")[,1]
+    curr_MM = NewMouse_df[g, "EffectSize"]
     curr_slopes + (curr_MM*curr_slopes) 
   })
   final = data.frame(mean_pred=colMeans(predictions, na.rm=T))
@@ -149,9 +150,13 @@ ComputePredictions = function(NewMouse_df, DataType)
   final$UpDown = sapply(final$mean_pred, function(x) ifelse(x>0,"+","-"))
   
   # Adding original data
-  final = merge(final, NewMouse_df, by.x = 0, by.y="MM.Entrez")
+  final = merge(final, NewMouse_df, by.x = 0, by.y=0)
   if(DataType=="microarray") colnames(final)[c(1,9:10)] = c("MM.Entrez", "Orig_FC", "Orig_Ztest")
-  else colnames(final)[c(1,9)] = c("MM.Entrez", "Orig_Ztest")
+  else 
+  {
+    colnames(final)[c(1,10)] = c("MM.Entrez", "Orig_Ztest")
+    final = final[,-9]
+  }
   
   # Combining with human genes and details
   data(HS_MM_Symbol_Entrez)
