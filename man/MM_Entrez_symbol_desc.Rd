@@ -4,7 +4,7 @@
 \name{MM_Entrez_symbol_desc}
 \alias{MM_Entrez_symbol_desc}
 \title{A data.frame containing the symbols of human and mouse orthologs and a description per gene}
-\format{An object of class \code{matrix} with 21025 rows and 3 columns.}
+\format{An object of class \code{data.frame} with 21025 rows and 3 columns.}
 \usage{
 MM_Entrez_symbol_desc
 }
