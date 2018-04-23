@@ -21,9 +21,6 @@
 #' A data.frame containing the Entrez IDs of human and mouse orthologs
 "HS_MM_Symbol_Entrez"
 
-#' A data.frame containing the Entrez IDs of human and mouse orthologs
-"MGD_orthologs"
-
 #' A data.frame containing the symbols of human and mouse orthologs and a description per gene
 "MM_Entrez_symbol_desc"
 
