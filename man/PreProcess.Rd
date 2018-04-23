@@ -2,15 +2,20 @@
 % Please edit documentation in R/functions.r
 \name{PreProcess}
 \alias{PreProcess}
-\title{Pre-processing of mouse data for predictions by FIT (for microarray data only)}
+\title{Pre-processing of mouse data for predictions by FIT}
 \usage{
-PreProcess(MouseData)
+PreProcess(MouseData, DataType)
 }
 \arguments{
 \item{MouseData}{The mouse data.}
+
+\item{DataType}{'microarray' or 'rnaseq'}
 }
 \description{
-Pre-processing includes 4 steps:
+First, the genes are filtered only to those that have slopes in the model.
+}
+\details{
+Pre-processing for microarrays includes 4 additional steps:
 a) Computing fold-change per gene
 b) Computing Z-scores per gene
 c) Computing Z-tests per gene

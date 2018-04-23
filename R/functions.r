@@ -62,48 +62,56 @@ CheckFormat = function(MouseData, DataType)
 
 
 
-#' Pre-processing of mouse data for predictions by FIT (for microarray data only)
+#' Pre-processing of mouse data for predictions by FIT 
 #' 
-#' Pre-processing includes 4 steps:
+#' First, the genes are filtered only to those that have slopes in the model.
+#' 
+#' Pre-processing for microarrays includes 4 additional steps:
 #' a) Computing fold-change per gene
 #' b) Computing Z-scores per gene
 #' c) Computing Z-tests per gene
 #' d) Merging human orthologs
 #' @param MouseData The mouse data.
+#' @param DataType 'microarray' or 'rnaseq'
 #' @export
-PreProcess = function(MouseData)
+PreProcess = function(MouseData, DataType)
 {
-  dis_samp = grep("d_*", colnames(MouseData), perl = T)
-  cont_samp = grep("c_*", colnames(MouseData), perl = T)
-  FC_Mouse = apply(MouseData, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})
-  Zscore_Mouse = apply(MouseData, 2L, function(col) {(col - mean(col, na.rm = T))/sd(col, na.rm = T) })
-    
-  dis_n = length(dis_samp)
-  con_n = length(cont_samp)
-  cont_sd = apply(Zscore_Mouse[,cont_samp],1L, sd, na.rm = T)
-  dis_sd = apply(Zscore_Mouse[,dis_samp],1L, sd, na.rm = T)
-    
-  n= nrow(Zscore_Mouse)
-  Z_test = sapply(X = rownames(Zscore_Mouse),USE.NAMES = F, FUN =  function(g)
+  data(slopes_per_gene_V2.0)
+  NewMouse_df = MouseData[rownames(MouseData) %in% names(slopes_per_gene_V2.0),]
+  NewMouse_df$MM.Entrez = as.character(NewMouse_df$MM.Entrez)
+  message("\nInitial number of genes: ",nrow(MouseData), "\nNumber of genes for which FIT predictions will be calculated: ", nrow(NewMouse_df))
+  
+  if (DataType == "rnaseq") return(NewMouse_df)
+  else
   {
-    numerator = mean(Zscore_Mouse[g, dis_samp], na.rm = T) - mean(Zscore_Mouse[g, cont_samp], na.rm = T)
-    denominator = sqrt(((cont_sd[g]^2)/con_n) + ((dis_sd[g]^2)/dis_n))
-    numerator/denominator
-  })
+    dis_samp = grep("d_*", colnames(NewMouse_df), perl = T)
+    cont_samp = grep("c_*", colnames(NewMouse_df), perl = T)
+    FC_Mouse = apply(NewMouse_df, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})
+    Zscore_Mouse = apply(NewMouse_df, 2L, function(col) {(col - mean(col, na.rm = T))/sd(col, na.rm = T) })
+      
+    dis_n = length(dis_samp)
+    con_n = length(cont_samp)
+    cont_sd = apply(Zscore_Mouse[,cont_samp],1L, sd, na.rm = T)
+    dis_sd = apply(Zscore_Mouse[,dis_samp],1L, sd, na.rm = T)
+      
+    n= nrow(Zscore_Mouse)
+    Z_test = sapply(X = rownames(Zscore_Mouse),USE.NAMES = F, FUN =  function(g)
+    {
+      numerator = mean(Zscore_Mouse[g, dis_samp], na.rm = T) - mean(Zscore_Mouse[g, cont_samp], na.rm = T)
+      denominator = sqrt(((cont_sd[g]^2)/con_n) + ((dis_sd[g]^2)/dis_n))
+      numerator/denominator
+    })
+    
+    Ztest_mean = mean(Z_test)
+    Ztest_mean_sd = sd(Z_test)
+    Z_test_standard = (Z_test - Ztest_mean)/Ztest_mean_sd
+    
+    comb_data = merge(FC_Mouse, Z_test_standard, by=0) 
+    colnames(comb_data)=c("MM.Entrez", "FC", "EffectSize")
+    return(comb_data)
+  }
   
-  Ztest_mean = mean(Z_test)
-  Ztest_mean_sd = sd(Z_test)
-  Z_test_standard = (Z_test - Ztest_mean)/Ztest_mean_sd
   
-  comb_data = merge(FC_Mouse, Z_test_standard, by=0) 
-  colnames(comb_data)=c("gene", "FC", "EffectSize")
-  rownames(comb_data) = comb_data[,"gene"]
-  comb_data = comb_data[,-1]
-  data(MGD_orthologs)
-  comb_data = merge(comb_data, MGD_orthologs, by.x=0, by.y="Mouse", all.x=T, all.y=F)
-  colnames(comb_data) = c("MM.Entrez", "FC", "EffectSize", "HS.Entrez")
-  
-  return(comb_data)
 }
 
 
@@ -148,10 +156,11 @@ ComputePredictions = function(NewMouse_df, DataType)
   # Combining with human genes and details
   data(HS_MM_Symbol_Entrez)
   final_ann = merge(final, HS_MM_Symbol_Entrez, by.x="MM.Entrez", by.y= "Mouse.Ortholog", all.x=T, all.y=F)
+  
   if(DataType=="microarray")
   {
     colnames(final_ann) = c("Mouse.Entrez", "FIT_prediction",  "CI_low", "CI_high", "CI_size", "CI_percentile", "FIT_percentile", 
-                        "UpDown", "Mouse_FoldChange", "Mouse_EffectSize", "Human.Entrez", "Human.symbol", "Human.Entrez", "Mouse.symbol")
+                        "UpDown", "Mouse_FoldChange", "Mouse_EffectSize", "Human.symbol", "Human.Entrez", "Mouse.symbol")
     final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol",
                              "Mouse_FoldChange", "Mouse_EffectSize", "FIT_prediction","FIT_percentile",
                              "UpDown", "CI_low", "CI_high", "CI_size", "CI_percentile")]
@@ -189,7 +198,6 @@ ComputePredictions = function(NewMouse_df, DataType)
 #' @export
 FIT = function(MouseFile, DataType)
 {
-  data(slopes_per_gene_V2.0)
   if((DataType != "microarray") & (DataType != "rnaseq")) stop("Error: DataType should be 'rnaseq' or 'microarray'.")
   if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
     
@@ -197,18 +205,10 @@ FIT = function(MouseFile, DataType)
   MouseData = CheckFile(MouseFile, DataType)
   CheckFormat(MouseData, DataType)
   
-  if (DataType=="microarray") NewMouse_df = MouseData[rownames(MouseData) %in% names(slopes_per_gene_V2.0),]
-  else NewMouse_df = MouseData[MouseData$MM.Entrez %in% names(slopes_per_gene_V2.0),]
-  message("\nInitial number of genes: ",nrow(MouseData), "\nNumber of genes for which FIT predictions will be calculated: ", nrow(NewMouse_df))
-  
-  if (DataType=="microarray") 
-  {
-    message("\nStep 2:\nPreprocessing the input data: computing fold-change, z-scores and z-test per gene.")
-    NewMouse_df = PreProcess(NewMouse_df)
-  } 
+  message("\nStep 2:\nPreprocessing the input data: computing fold-change, z-scores and z-test per gene.")
+  NewMouse_df = PreProcess(MouseData, DataType)
     
-  if (DataType=="microarray") message("\nStep 3:\nPredicting human relevant genes using the FIT model.")
-  else message("\nStep 2:\nPredicting human relevant genes using the FIT model.")
+  message("\nStep 3:\nPredicting human relevant genes using the FIT model.")
   ComputePredictions(NewMouse_df, DataType)
 }
 
