@@ -223,46 +223,6 @@ FIT = function(MouseFile, DataType)
 
 
 
-#' Download Reference Data
-#' 
-#' This function allows access to the latest reference data used by the FIT model
-#' @return A data.frame containing the following columns:
-#' \itemize{
-#'   \item{\strong{Disease} - Disease name.}
-#'   \item{\strong{DataType} - <Technology>_<RF/ST> - \strong{Technology} can be either RNAseq or Microarrays.
-#'          \strong{RF/ST} can either be \strong{RF} (Reference) denoting a cross-species pairing (CSP) where the human and mouse datasets were directly 
-#'          contrasted to one another in a publication authored by the researchers who had generated at least one of the datasets, 
-#'          or \strong{ST} (Standard) denoting a CSP which consisted of human datasets and corresponding datasets of a mouse model of the 
-#'          human disease in a separate study.}
-#'   \item{\strong{CSP_ID} - ID of the CSP.} 
-#'   \item{\strong{MM.Entrez, HS.Entrez} - Gene IDs.}
-#'   \item{\strong{FC.HS, FC.MM} - Mouse (MM) and human (HS) fold-change for the CSP.}
-#'   \item{\strong{EffSize.HS, EffSize.MM} - Mouse and human effect sizes for the CSP. 
-#'                 Z-tests for microarrays, estimated fold-change, as computed in Sleuth for RNA-seq.}
-#'   \item{\strong{qval.HS, qval.MM} - Mouse (MM) and human (HS) q-values for the CSP.}
-#'   }
-#' @export
-GetRefData = function()
-{
-  AllData_V2.0
-}
-
-
-#' Download sampel data
-#' 
-#' This function allows download of sample data that can be used by FIT, in CSV format.
-#' The file will be saved in the name "SampleRNAseq.csv" or "SampleMicroarray.csv" depending on the DataType chosen.
-#' @param DataType Either "microarray" or "rnaseq", depending on the technology by which the data was assayed.
-#' @export
-GetSampleData = function(DataType)
-{
-  if ((DataType!="rnaseq")&(DataType!="microarray")) stop("Error: DataType should be 'rnaseq' or 'microarray'.")
-  data(RNAseq_sample)
-  data(microarray_sample)
-  if(DataType == "rnaseq") write.table(RNAseq_sample, "SampleRNAseq.csv", sep=",", quote = F, row.names = F)
-  else write.table(microarray_sample, "SampleMicroarray.csv", sep=",", quote = F, row.names = F)
-}
-
 
 
 #' Run FIT improvement prediction classifier 
