@@ -161,20 +161,24 @@ ComputePredictions = function(NewMouse_df, DataType)
   # Combining with human genes and details
   data(HS_MM_Symbol_Entrez)
   final_ann = merge(final, HS_MM_Symbol_Entrez, by.x="MM.Entrez", by.y= "Mouse.Ortholog", all.x=T, all.y=F)
+  data(MM_Entrez_symbol_desc)
+  final_ann = merge(final_ann, MM_Entrez_symbol_desc, by="MM.Entrez", all.x=T, all.y=F)
   
   if(DataType=="microarray")
   {
+    final_ann = final_ann[,-15]
     colnames(final_ann) = c("Mouse.Entrez", "FIT_prediction",  "CI_low", "CI_high", "CI_size", "CI_percentile", "FIT_percentile", 
-                        "UpDown", "Mouse_FoldChange", "Mouse_EffectSize", "Human.symbol", "Human.Entrez", "Mouse.symbol")
-    final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol",
+                        "UpDown", "Mouse_FoldChange", "Mouse_EffectSize", "Human.symbol", "Human.Entrez", "Mouse.symbol", "Description")
+    final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol","Description",
                              "Mouse_FoldChange", "Mouse_EffectSize", "FIT_prediction","FIT_percentile",
                              "UpDown", "CI_low", "CI_high", "CI_size", "CI_percentile")]
   }
   else
   {
+    final_ann = final_ann[,-13]
     colnames(final_ann) = c("Mouse.Entrez", "FIT_prediction",  "CI_low", "CI_high", "CI_size", "CI_percentile", "FIT_percentile", 
-                            "UpDown", "Mouse_EffectSize", "Human.symbol", "Human.Entrez", "Mouse.symbol")
-    final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol",
+                            "UpDown", "Mouse_EffectSize", "Human.symbol", "Human.Entrez", "Mouse.symbol", "Description")
+    final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol","Description",
                              "Mouse_EffectSize", "FIT_prediction","FIT_percentile",
                              "UpDown", "CI_low", "CI_high", "CI_size", "CI_percentile")]
   }
