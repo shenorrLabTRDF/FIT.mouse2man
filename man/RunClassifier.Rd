@@ -4,7 +4,7 @@
 \alias{RunClassifier}
 \title{Run FIT improvement prediction classifier}
 \usage{
-RunClassifier(MouseFile, qval = 0.1, FC = 0.15)
+RunClassifier(MouseFile, qval = 0.1, FC = 0.15, verbose = F)
 }
 \arguments{
 \item{MouseFile}{File name that includes the mouse data (log expression per gene for all disease and control sampels), in CSV format}

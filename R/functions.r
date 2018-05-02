@@ -233,7 +233,7 @@ FIT = function(MouseFile, DataType)
 #' @param FC the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
 #'            0.15 denotes the top 15\% of genes with highest fold-change. (default= 0.15)
 #' @export
-RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
+RunClassifier = function(MouseFile, qval=0.1, FC=0.15, verbose=F)
 {
   # Input checks
   if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
@@ -269,9 +269,13 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15)
   else message("FIT will likely improve this dataset.")
   message("****************************************************************************\n")
   
-  message("See the performance results of the classifier to identify the performance of the classifier in the selected set of theesholds (Fold-change=",
-          FC,", q-value=",qval,")")
-  ShowClassifierPerformance()
+  if(verbose)
+  {
+    message("See the performance results of the classifier to identify the performance of the classifier in the selected set of theesholds (Fold-change=",
+            FC,", q-value=",qval,")")
+    ShowClassifierPerformance()
+  }
+  pred_res
 }
 
 
