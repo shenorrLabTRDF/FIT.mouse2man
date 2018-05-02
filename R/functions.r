@@ -229,11 +229,12 @@ FIT = function(MouseFile, DataType)
 #' 
 #' The SVM classifier predicts whether FIT will be able to improve a specific mouse data
 #' @param MouseFile File name that includes the mouse data (log expression per gene for all disease and control sampels), in CSV format 
+#' @param DataType Either "microarray" or "rnaseq", depending on the technology by which the data was assayed.
 #' @param qval the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)
 #' @param FC the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
 #'            0.15 denotes the top 15\% of genes with highest fold-change. (default= 0.15)
 #' @export
-RunClassifier = function(MouseFile, qval=0.1, FC=0.15, verbose=F)
+RunClassifier = function(MouseFile, DataType, qval=0.1, FC=0.15, verbose=F)
 {
   # Input checks
   if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
@@ -242,12 +243,12 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15, verbose=F)
   if(!qval %in%  qvals) stop(paste0("q-value should be one of the following:\n", paste(qvals, collapse = " ")))
   if(!FC %in%  FCs) stop(paste0("The fold-change should be one of the following:\n", paste(FCs, collapse = " ")))
   
-  MouseData = read.table(MouseFile, sep=",", header=T)  
+  MouseData = CheckFile(MouseFile, DataType)
   
   # Creating PC point from input mouse data
   data(pca_rotations)
   intersection_genes = rownames(MouseData)[rownames(MouseData) %in% rownames(pca_rotations)]
-  message("The mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(pca_rotations)," genes.",
+  M1 = paste0("The mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(pca_rotations)," genes.",
           "\nThe current run will be based on ", length(intersection_genes), " genes (intersection between the current data and the classifier set of genes.")
   rotations = pca_rotations[intersection_genes,]
   MouseData = MouseData[intersection_genes,]
@@ -261,21 +262,23 @@ RunClassifier = function(MouseFile, qval=0.1, FC=0.15, verbose=F)
   # Running classifier
   data(best_models)
   classifier = best_models[[paste0(FC, "_", qval)]]
-  pred_res = as.character(predict(classifier, newdata = MM_pca_point))
+  pred_res = as.numeric(as.character(predict(classifier, newdata = MM_pca_point)))
 
   # Providing results
-  message("\n*************************  Classifier prediction  **************************")
-  if(pred_res == 0) message("It is unlikely FIT will be able to improve this dataset.")
-  else message("FIT will likely improve this dataset.")
-  message("****************************************************************************\n")
+  M2 = "\n*************************  Classifier prediction  **************************\n"
+  if(pred_res == 0) M2 = paste0(M2, "It is unlikely FIT will be able to improve this dataset.\n")
+  else M2 = paste0(M2, "FIT will likely improve this dataset.")
+  M2 = paste0(M2, "****************************************************************************\n")
   
   if(verbose)
   {
+    message(M1, "\n", M2)
     message("See the performance results of the classifier to identify the performance of the classifier in the selected set of theesholds (Fold-change=",
             FC,", q-value=",qval,")")
     ShowClassifierPerformance()
   }
-  pred_res
+  else
+    return(list(pred_res, M1, M2))
 }
 
 

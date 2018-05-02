@@ -4,10 +4,12 @@
 \alias{RunClassifier}
 \title{Run FIT improvement prediction classifier}
 \usage{
-RunClassifier(MouseFile, qval = 0.1, FC = 0.15, verbose = F)
+RunClassifier(MouseFile, DataType, qval = 0.1, FC = 0.15, verbose = F)
 }
 \arguments{
 \item{MouseFile}{File name that includes the mouse data (log expression per gene for all disease and control sampels), in CSV format}
+
+\item{DataType}{Either "microarray" or "rnaseq", depending on the technology by which the data was assayed.}
 
 \item{qval}{the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)}
 
