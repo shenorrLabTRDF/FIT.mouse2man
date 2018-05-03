@@ -238,6 +238,7 @@ FIT = function(MouseFile, DataType)
 #' @param qval the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)
 #' @param FC the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
 #'            0.15 denotes the top 15\% of genes with highest fold-change. (default= 0.15)
+#' @param verbose A logical value defining whether detialed messages should be printed.
 #' @export
 RunClassifier = function(MouseData=NULL, MouseFile=NULL, DataType=NULL, qval=0.1, FC=0.15, verbose=F)
 {

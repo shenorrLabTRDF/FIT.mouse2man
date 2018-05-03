@@ -18,6 +18,8 @@ RunClassifier(MouseData = NULL, MouseFile = NULL, DataType = NULL,
 
 \item{FC}{the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
 0.15 denotes the top 15\% of genes with highest fold-change. (default= 0.15)}
+
+\item{verbose}{A logical value defining whether detialed messages should be printed.}
 }
 \description{
 The SVM classifier predicts whether FIT will be able to improve a specific mouse data.
