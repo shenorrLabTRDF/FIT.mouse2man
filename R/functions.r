@@ -9,6 +9,10 @@ CheckFile = function(MouseFile, DataType)
 {
   if(!(file.exists(MouseFile))) stop(paste0("Error: input file (",MouseFile,") doesn't exist"))
   data = read.table(MouseFile, sep=",", header=1)
+  
+  if((ncol(data) ==2) & (DataType=="microarray")) stop("Error: It seems like you uploaded RNAseq data but picked a 'microarray' datatype.")
+  if((ncol(data) >2) & (DataType=="rnaseq")) stop("Error: It seems like you uploaded microarray data but picked a 'RNAseq' datatype.")
+  
   if(any(duplicated(data[,1]))) stop("Error: The mouse data contains duplicated gene names.")
   if(any(is.na(data[,1]))) stop("Error: The mouse data contains missing gene names.")
   rownames(data) = data[,1]
@@ -227,35 +231,54 @@ FIT = function(MouseFile, DataType)
 
 #' Run FIT improvement prediction classifier 
 #' 
-#' The SVM classifier predicts whether FIT will be able to improve a specific mouse data
-#' @param MouseFile File name that includes the mouse data (log expression per gene for all disease and control sampels), in CSV format 
-#' @param DataType Either "microarray" or "rnaseq", depending on the technology by which the data was assayed.
+#' The SVM classifier predicts whether FIT will be able to improve a specific mouse data.
+#' @param MouseData The pre-processed mouse dataset, or NULL in case MouseFIle ise given
+#' @param MouseFile File name that includes the mouse data (log expression per gene for all disease and control sampels), in CSV format. NULL in case MouseData is given
+#' @param DataType Either "microarray" or "rnaseq", depending on the technology by which the data was assayed. NULL if MouseData is given
 #' @param qval the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)
 #' @param FC the fold-change cuttoff the user will use to interpret FIT's predictions, given as fraction from the top. For example, 
 #'            0.15 denotes the top 15\% of genes with highest fold-change. (default= 0.15)
 #' @export
-RunClassifier = function(MouseFile, DataType, qval=0.1, FC=0.15, verbose=F)
+RunClassifier = function(MouseData=NULL, MouseFile=NULL, DataType=NULL, qval=0.1, FC=0.15, verbose=F)
 {
   # Input checks
-  if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
+  if(!is.null(MouseFile))
+    if(!file.exists(MouseFile)) stop(paste0("The file ",MouseFile," doesn't exist."))
+  if((!is.null(MouseData)) & (!is.null(MouseFile)))
+    stop("Error: This function should either get a MouseData data.frame, or MouseFIle character vector")
+  if(is.null(DataType))
+    stop("Error: Illegal value for DataType")
+  if((DataType!="microarray") & (DataType!="rnaseq"))
+    stop("Error: Illegal value for DataType")
+  
   qvals = c(0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4,0.5,0.6,0.7,0.8,0.9,1)
   FCs = c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25,0.3,0.35,0.4)
   if(!qval %in%  qvals) stop(paste0("q-value should be one of the following:\n", paste(qvals, collapse = " ")))
   if(!FC %in%  FCs) stop(paste0("The fold-change should be one of the following:\n", paste(FCs, collapse = " ")))
   
-  MouseData = CheckFile(MouseFile, DataType)
+  if(is.null(MouseData))
+  {
+    MouseData = CheckFile(MouseFile, DataType)
+    res = CheckFormat(MouseData , DataType)
+    M1 = res 
+  } else M1=""
   
   # Creating PC point from input mouse data
   data(pca_rotations)
   intersection_genes = rownames(MouseData)[rownames(MouseData) %in% rownames(pca_rotations)]
-  M1 = paste0("The mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(pca_rotations)," genes.",
+  M1 = paste0(M1, "\nThe mouse data contains ", nrow(MouseData), " genes.\nThe classifier can be based on ", nrow(pca_rotations)," genes.",
           "\nThe current run will be based on ", length(intersection_genes), " genes (intersection between the current data and the classifier set of genes.")
   rotations = pca_rotations[intersection_genes,]
   MouseData = MouseData[intersection_genes,]
   
-  dis_samp = grep("d_*", colnames(MouseData), perl = T)
-  cont_samp = grep("c_*", colnames(MouseData), perl = T)
-  FC_Mouse = t(as.data.frame(apply(MouseData, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})))
+  if(DataType == "microarray") 
+  {
+    dis_samp = grep("d_*", colnames(MouseData), perl = T)
+    cont_samp = grep("c_*", colnames(MouseData), perl = T)
+    FC_Mouse = t(as.data.frame(apply(MouseData, 1L, function(row) {mean(row[dis_samp], na.rm = T) - mean(row[cont_samp], na.rm = T)})))
+  }
+  else 
+    FC_Mouse = as.vector(MouseData[,2])
   
   MM_pca_point = FC_Mouse %*% rotations[,1:50]
   

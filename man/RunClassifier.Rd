@@ -4,12 +4,15 @@
 \alias{RunClassifier}
 \title{Run FIT improvement prediction classifier}
 \usage{
-RunClassifier(MouseFile, DataType, qval = 0.1, FC = 0.15, verbose = F)
+RunClassifier(MouseData = NULL, MouseFile = NULL, DataType = NULL,
+  qval = 0.1, FC = 0.15, verbose = F)
 }
 \arguments{
-\item{MouseFile}{File name that includes the mouse data (log expression per gene for all disease and control sampels), in CSV format}
+\item{MouseData}{The pre-processed mouse dataset, or NULL in case MouseFIle ise given}
 
-\item{DataType}{Either "microarray" or "rnaseq", depending on the technology by which the data was assayed.}
+\item{MouseFile}{File name that includes the mouse data (log expression per gene for all disease and control sampels), in CSV format. NULL in case MouseData is given}
+
+\item{DataType}{Either "microarray" or "rnaseq", depending on the technology by which the data was assayed. NULL if MouseData is given}
 
 \item{qval}{the q-value cuttoff the user will use to interpret FIT's predictions. (default= 0.1)}
 
@@ -17,5 +20,5 @@ RunClassifier(MouseFile, DataType, qval = 0.1, FC = 0.15, verbose = F)
 0.15 denotes the top 15\% of genes with highest fold-change. (default= 0.15)}
 }
 \description{
-The SVM classifier predicts whether FIT will be able to improve a specific mouse data
+The SVM classifier predicts whether FIT will be able to improve a specific mouse data.
 }
