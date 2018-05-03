@@ -3,7 +3,7 @@ Title: Predicts human disease relevant genes from mouse model gene expression, b
 Version: 1.1
 Authors@R: person("Rachelly", "Normand", email = "rachelly@campus.technion.ac.il", role = c("aut", "cre"))
 Description: -
-Depends: R (>= 3.3.2), e1071(>= 1.6-8), imager(>= 0.40.2)
+Depends: R (>= 3.2.3), e1071(>= 1.6-8), imager(>= 0.40.2)
 Imports: e1071, imager
 LazyData: true
 RoxygenNote: 6.0.1.9000
