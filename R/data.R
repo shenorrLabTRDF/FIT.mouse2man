@@ -39,4 +39,9 @@
 #' The slopes derived from the linear regression FIT computed from human and mouse data, per gene. This is used for the prediciton of human effect size values.
 "slopes_per_gene_V2.0"
 
+#' Microarray sample data to run in the function RunClassifier - that produces a negative result (FIT is unlikely to improve the data, for FC=0.15 qval=0.1)
+"Psoriasis_classifier_neg"
+
+#' Microarray sample data to run in the function RunClassifier - that produces a positive result (FIT is likely to improve the data, for FC=0.15 qval=0.1)
+"StaphInfection_classifier_pos"
 
