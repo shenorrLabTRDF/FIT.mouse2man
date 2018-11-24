@@ -65,7 +65,7 @@ data(RNAseq_sample)
 ```
 
 ### Example
-To run the FIT pipeline, use the FIT() function:
+To run the FIT pipeline, use the FIT() function, the run may take a few minutes:
 ```
 res = FIT("MyMouseData.csv", "microarray") # Runs the FIT pipeline which computes prediction of the human effect-size per gene
 ```
@@ -88,7 +88,9 @@ The training data which is used by the model is available by:
 data(AllData_V2.0)
 ```
 
-
+### Dependencies
+None. 
+The software was buikt and tested in R-3.3.2.
 
 ## Authors
 
