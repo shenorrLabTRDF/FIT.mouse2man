@@ -170,7 +170,7 @@ ComputePredictions = function(NewMouse_df, DataType)
   
   if(DataType=="microarray")
   {
-    final_ann = final_ann[,-15]
+    final_ann = final_ann[,-14]
     colnames(final_ann) = c("Mouse.Entrez", "FIT_prediction",  "CI_low", "CI_high", "CI_size", "CI_percentile", "FIT_percentile", 
                         "UpDown", "Mouse_FoldChange", "Mouse_EffectSize", "Human.symbol", "Human.Entrez", "Mouse.symbol", "Description")
     final_ann = final_ann[,c("Mouse.Entrez","Human.Entrez", "Mouse.symbol",  "Human.symbol","Description",
