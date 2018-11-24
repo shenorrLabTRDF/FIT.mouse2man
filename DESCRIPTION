@@ -1,6 +1,6 @@
 Package: FIT.mouse2man
 Title: Predicts human disease relevant genes from mouse model gene expression, based on prior mouse and human gene expression comparisons
-Version: 1.1.1
+Version: 1.2
 Authors@R: person("Rachelly", "Normand", email = "rachelly@campus.technion.ac.il", role = c("aut", "cre"))
 Description: -
 Depends: R (>= 3.2.3), e1071(>= 1.6-8)
