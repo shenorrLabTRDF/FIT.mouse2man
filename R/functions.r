@@ -84,7 +84,11 @@ PreProcess = function(MouseData, DataType)
   NewMouse_df = MouseData[rownames(MouseData) %in% names(slopes_per_gene_V2.0),]
   message("\nInitial number of genes: ",nrow(MouseData), "\nNumber of genes for which FIT predictions will be calculated: ", nrow(NewMouse_df))
   
-  if (DataType == "rnaseq") return(NewMouse_df)
+  if (DataType == "rnaseq") 
+  {
+    colnames(NewMouse_df)=c("MM.Entrez", "EffectSize")
+    return(NewMouse_df)
+  }
   else
   {
     dis_samp = grep("d_*", colnames(NewMouse_df), perl = T)
